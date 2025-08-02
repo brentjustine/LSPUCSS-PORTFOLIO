@@ -13,5 +13,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ THEN include your routes
+@app.get("/ping")
+def ping():
+    return {"status": "ok"}
 app.include_router(router)
