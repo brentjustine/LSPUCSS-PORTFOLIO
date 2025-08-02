@@ -2,14 +2,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import router
 
-app = FastAPI(title="Student Portfolio API", version="0.1.0")
+app = FastAPI()  # ✅ FIRST define the app
 
+# ✅ THEN add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["https://lspucss-portfolio.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# ✅ THEN include your routes
 app.include_router(router)
