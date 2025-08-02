@@ -2,7 +2,7 @@ import axios from "axios";
 
 // ✅ Use environment variable for production/deployment
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_BACKEND_URL,
 });
 
 // 🔁 Fetch all projects
