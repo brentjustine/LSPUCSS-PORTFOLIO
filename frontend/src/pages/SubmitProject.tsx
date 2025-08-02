@@ -51,7 +51,7 @@ export default function SubmitProject() {
         }
 
         // 🤖 Send to backend AI service
-        const aiRes = await fetch(`${import.meta.env.VITE_API_URL}/submit`, {
+        const aiRes = await fetch(`${import.meta.env.VITE_BACKEND_URL}/submit`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
