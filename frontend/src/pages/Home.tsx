@@ -59,7 +59,7 @@ export default function Home() {
 
   const fetchAISummary = async (userId: string, projectCount: number) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/summary?user_id=${userId}`);
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/summary?user_id=${userId}`);
       const json = await res.json();
       const summary = json.summary || "No summary available.";
 
