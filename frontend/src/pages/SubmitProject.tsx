@@ -86,7 +86,7 @@ export default function SubmitProject() {
       {
         loading: "Submitting your project...",
         success: "✅ Project submitted!",
-        error: (err) => `❌ ${err.message || "Submission failed"}`,
+        error: (err) => `{err.message || "Submission failed"}`,
       }
     );
   };
