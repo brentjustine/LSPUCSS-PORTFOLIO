@@ -15,15 +15,13 @@ export default function Users() {
   const [search, setSearch] = useState('');
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const query = useQuery();
+  const location = useLocation();
 
-const location = useLocation();
-
-    useEffect(() => {
+  useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const q = searchParams.get("q") || "";
     setSearch(q);
-    }, [location.search]);
-
+  }, [location.search]);
 
   useEffect(() => {
     (async () => {
@@ -67,83 +65,89 @@ const location = useLocation();
   };
 
   return (
-    <div className="max-w-5xl mx-auto mt-8 px-4">
-      <h2 className="text-2xl font-bold mb-4">👥 Public Student Portfolios</h2>
+    <div className="min-h-screen bg-gray-50 px-4 py-10">
+      <div className="max-w-6xl mx-auto space-y-8">
+        <h2 className="text-3xl font-bold text-blue-700 text-center">👥 Student Portfolios</h2>
 
-      <input
-        type="text"
-        placeholder="Search by name or email..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        autoFocus
-        className="mb-6 px-4 py-2 w-full border rounded shadow-sm"
-      />
+        <input
+          type="text"
+          placeholder="Search by name or email..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full max-w-xl mx-auto block border border-gray-300 px-4 py-2 rounded-lg shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
 
-      <div className="space-y-8">
-        {filteredUsers.map((u) => {
-          const userProjects = getUserProjects(u.id);
-          const pieData = getUserScoreData(u.id);
+        <div className="space-y-8">
+          {filteredUsers.map((u) => {
+            const userProjects = getUserProjects(u.id);
+            const pieData = getUserScoreData(u.id);
 
-          return (
-            <div key={u.id} className="bg-white p-4 rounded-xl shadow-md space-y-4">
-              <div className="flex items-center gap-4">
-                <img
+            return (
+              <div key={u.id} className="bg-white p-6 rounded-xl shadow-lg space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center gap-4">
+                  <img
                     src={
-                        (u.profile_picture_url
+                      u.profile_picture_url
                         ? `${u.profile_picture_url}?t=${new Date(u.updated_at).getTime()}`
-                        : 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png')
+                        : 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png'
                     }
                     alt="avatar"
-                    className="w-16 h-16 rounded-full object-cover"
-                    />
-                <div>
-                  <Link
-                    to={`/user/${u.id}`}
-                    className="text-xl font-bold text-blue-600 hover:underline"
-                  >
-                    {u.full_name}
-                  </Link>
-                  <p className="text-gray-500 text-sm">{u.bio || 'No bio available'}</p>
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="flex justify-center">
-                  <PieChart width={200} height={200}>
-                    <Pie
-                      data={pieData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={80}
+                    className="w-20 h-20 rounded-full object-cover border"
+                  />
+                  <div>
+                    <Link
+                      to={`/user/${u.id}`}
+                      className="text-xl font-bold text-blue-600 hover:underline"
                     >
-                      {pieData.map((entry, i) => (
-                        <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
+                      {u.full_name}
+                    </Link>
+                    <p className="text-sm text-gray-600">{u.bio || 'No bio available'}</p>
+                  </div>
                 </div>
 
-                <div className="min-h-[200px]">
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart
-                      data={userProjects.map((p) => ({ name: p.title, score: p.ai_score ?? 0 }))}
-                      margin={{ top: 20, right: 10, left: 10, bottom: 40 }}
-                    >
-                      <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-15} textAnchor="end" />
-                      <YAxis domain={[0, 10]} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Pie Chart */}
+                  <div className="flex justify-center">
+                    <PieChart width={200} height={200}>
+                      <Pie
+                        data={pieData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                      >
+                        {pieData.map((entry, i) => (
+                          <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
+                        ))}
+                      </Pie>
                       <Tooltip />
-                      <Bar dataKey="score" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                    </PieChart>
+                  </div>
+
+                  {/* Bar Chart */}
+                  <div className="min-h-[200px]">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <BarChart
+                        data={userProjects.map((p) => ({
+                          name: p.title,
+                          score: p.ai_score ?? 0
+                        }))}
+                        margin={{ top: 20, right: 10, left: 10, bottom: 40 }}
+                      >
+                        <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-15} textAnchor="end" />
+                        <YAxis domain={[0, 10]} />
+                        <Tooltip />
+                        <Bar dataKey="score" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );

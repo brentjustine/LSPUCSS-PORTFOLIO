@@ -31,32 +31,32 @@ export default function UpdatePassword() {
     if (error) {
       setError(error.message);
     } else {
-      setSuccess("Password updated! Redirecting to login...");
+      setSuccess("✅ Password updated! Redirecting...");
       setTimeout(() => navigate("/login"), 2000);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 px-4 py-12 flex justify-center">
-      <div className="bg-white p-6 rounded-xl shadow w-full max-w-md self-start">
-        <h1 className="text-2xl font-bold mb-4 text-center">🔑 Set New Password</h1>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-600 to-green-500 px-4">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+        <h1 className="text-2xl font-bold text-center text-blue-700 mb-6">🔐 Set New Password</h1>
 
         {error && (
-          <div className="text-sm text-red-600 bg-red-100 p-3 rounded mb-3">
+          <div className="text-sm text-red-600 bg-red-100 border border-red-200 p-3 rounded mb-4">
             {error}
           </div>
         )}
         {success && (
-          <div className="text-sm text-green-600 bg-green-100 p-3 rounded mb-3">
+          <div className="text-sm text-green-700 bg-green-100 border border-green-200 p-3 rounded mb-4">
             {success}
           </div>
         )}
 
-        <form onSubmit={handleUpdate} className="space-y-4">
+        <form onSubmit={handleUpdate} className="space-y-5">
           <input
             type="password"
             placeholder="New Password"
-            className="w-full p-2 border rounded"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             required
@@ -64,14 +64,14 @@ export default function UpdatePassword() {
           <input
             type="password"
             placeholder="Confirm New Password"
-            className="w-full p-2 border rounded"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
           />
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition"
+            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
           >
             Update Password
           </button>

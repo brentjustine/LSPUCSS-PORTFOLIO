@@ -118,7 +118,6 @@ export default function Home() {
     setLoading(true);
     const ids = Array.from(selectedProjects);
 
-    // Delete storage files
     const { data: filesToDelete } = await supabase.from("projects").select("file_paths").in("id", ids);
     const paths = (filesToDelete || []).flatMap(p => {
       try {
@@ -132,7 +131,6 @@ export default function Home() {
       if (error) return toast.error("Storage delete failed: " + error.message);
     }
 
-    // Delete projects
     const { error: deleteError } = await supabase.from("projects").delete().in("id", ids);
     if (deleteError) {
       toast.error("Delete failed: " + deleteError.message);
@@ -143,19 +141,17 @@ export default function Home() {
     toast.success("Deleted successfully.");
     setSelectedProjects(new Set());
 
-    // Wait a little before refetching to allow Supabase to sync
     setTimeout(async () => {
       const user = await getUser();
       if (user) {
         localStorage.removeItem(`aiSummary:${user.id}`);
         localStorage.removeItem(`projectsCount:${user.id}`);
         localStorage.setItem("ai_refresh_needed", "true");
-        await fetchProjects(true); // This will call fetchAISummary inside
+        await fetchProjects(true);
       }
       setLoading(false);
-    }, 1000); // 🕒 Wait 1 second to avoid stale results
+    }, 1000);
   };
-
 
   const averageScore = projects.length > 0
     ? projects.reduce((acc, p) => acc + (p.ai_score || 0), 0) / projects.length
@@ -172,121 +168,137 @@ export default function Home() {
   }));
 
   return (
-    <div className="max-w-5xl mx-auto mt-6 px-4 pb-20 relative">
-      <div className="flex gap-2 border-b pb-2 mb-4 overflow-x-auto">
-        {TABS.map((tab) => (
+    <div className="flex h-screen">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white shadow h-full">
+        <div className="p-6 font-bold text-xl text-gray-800">LSPU Online</div>
+        <nav className="space-y-4 p-4 text-gray-700">
+          <a href="#" className="flex items-center space-x-2 hover:text-blue-600">📁 <span>Projects</span></a>
+          <a href="#" className="flex items-center space-x-2">📊 <span>AI Overview</span></a>
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 bg-gray-50 p-6 overflow-y-auto">
+        <header className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">My Projects Dashboard</h1>
           <button
-            key={tab.name}
-            onClick={() => setActiveTab(tab.name)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-t font-semibold transition-all text-sm md:text-base ${
-              activeTab === tab.name ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-800"
-            }`}
+            onClick={() => navigate("/submit")}
+            className="bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700"
           >
-            <span className="md:hidden">{tab.icon}</span>
-            <span className="hidden md:inline">{tab.name}</span>
+            <AiOutlinePlus className="inline-block mr-1" /> New Project
           </button>
-        ))}
-      </div>
+        </header>
 
-      {loading && <div className="text-center py-10 text-gray-500 animate-pulse">⏳ Loading projects...</div>}
-
-      {!loading && activeTab === "Projects" && (
-        <>
-          {selectedProjects.size > 0 && (
+        {/* Tabs */}
+        <div className="flex gap-2 border-b pb-2 mb-4 overflow-x-auto">
+          {TABS.map((tab) => (
             <button
-              onClick={handleDelete}
-              className="mb-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+              key={tab.name}
+              onClick={() => setActiveTab(tab.name)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-t font-semibold transition-all text-sm md:text-base ${
+                activeTab === tab.name ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-800"
+              }`}
             >
-              Delete Selected ({selectedProjects.size})
+              <span>{tab.icon}</span>
+              <span>{tab.name}</span>
             </button>
-          )}
+          ))}
+        </div>
 
-          <div className="space-y-4">
-            {projects.length === 0 ? (
-              <div className="text-center py-20 text-gray-500 space-y-4">
-                <div className="text-6xl">📁</div>
-                <p className="text-lg font-medium">No projects yet</p>
-                <p className="text-sm text-gray-400">Click the <AiOutlinePlus className="inline text-base" /> button to add one!</p>
-              </div>
-            ) : (
-              projects.map((project) => (
-                <div key={project.id} className="flex items-start gap-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedProjects.has(project.id)}
-                    onChange={() => toggleSelectProject(project.id)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="mt-3 w-5 h-5 accent-blue-600"
-                  />
-                  <Link to={`/project/${project.id}`} className="flex-1 block no-underline">
-                    <ProjectCard
-                      title={project.title}
-                      description={project.description}
-                      ai_score={project.ai_score}
-                    />
-                  </Link>
-                </div>
-              ))
+        {loading && <div className="text-center py-10 text-gray-500 animate-pulse">⏳ Loading projects...</div>}
+
+        {!loading && activeTab === "Projects" && (
+          <div>
+            {selectedProjects.size > 0 && (
+              <button
+                onClick={handleDelete}
+                className="mb-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+              >
+                Delete Selected ({selectedProjects.size})
+              </button>
             )}
-          </div>
-        </>
-      )}
 
-      {!loading && activeTab === "AI Overview" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white rounded shadow p-4 flex flex-col items-center">
-              <h3 className="text-base md:text-lg font-bold mb-4 text-center">Overall AI Score</h3>
-              <PieChart width={250} height={250}>
-                <Pie
-                  data={pieData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                >
-                  {pieData.map((entry, i) => (
-                    <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </div>
-
-            <div className="bg-white p-4 md:p-6 rounded shadow flex justify-center items-center min-h-[300px]">
+            <div className="space-y-4">
               {projects.length === 0 ? (
-                <p className="text-gray-500 text-center">No performance data available yet.</p>
+                <div className="text-center py-20 text-gray-500 space-y-4">
+                  <div className="text-6xl">📁</div>
+                  <p className="text-lg font-medium">No projects yet</p>
+                  <p className="text-sm text-gray-400">Click the plus button to add one!</p>
+                </div>
               ) : (
-                <ResponsiveContainer width="95%" height={300}>
-                  <BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                    <YAxis domain={[0, 10]} />
-                    <Tooltip />
-                    <Bar dataKey="score" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                projects.map((project) => (
+                  <div key={project.id} className="flex items-start gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedProjects.has(project.id)}
+                      onChange={() => toggleSelectProject(project.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="mt-3 w-5 h-5 accent-blue-600"
+                    />
+                    <Link to={`/project/${project.id}`} className="flex-1 block no-underline">
+                      <ProjectCard
+                        title={project.title}
+                        description={project.description}
+                        ai_score={project.ai_score}
+                      />
+                    </Link>
+                  </div>
+                ))
               )}
             </div>
           </div>
+        )}
 
-          <div className="bg-white rounded shadow p-4">
-            <h3 className="text-base md:text-lg font-bold mb-2">AI Learning Path</h3>
-            <p className="text-sm text-gray-700 whitespace-pre-wrap">
-              {aiSummary ?? "Loading AI summary..."}
-            </p>
+        {!loading && activeTab === "AI Overview" && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white rounded shadow p-4 flex flex-col items-center">
+                <h3 className="text-base md:text-lg font-bold mb-4 text-center">Overall AI Score</h3>
+                <PieChart width={250} height={250}>
+                  <Pie
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                  >
+                    {pieData.map((entry, i) => (
+                      <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </div>
+
+              <div className="bg-white p-4 md:p-6 rounded shadow flex justify-center items-center min-h-[300px]">
+                {projects.length === 0 ? (
+                  <p className="text-gray-500 text-center">No performance data available yet.</p>
+                ) : (
+                  <ResponsiveContainer width="95%" height={300}>
+                    <BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
+                      <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                      <YAxis domain={[0, 10]} />
+                      <Tooltip />
+                      <Bar dataKey="score" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white rounded shadow p-4">
+              <h3 className="text-base md:text-lg font-bold mb-2">AI Learning Path</h3>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                {aiSummary ?? "Loading AI summary..."}
+              </p>
+            </div>
           </div>
-        </div>
-      )}
-
-      <button
-        onClick={() => navigate("/submit")}
-        className="fixed bottom-5 right-5 md:bottom-6 md:right-10 z-50 bg-blue-600 text-white rounded-full p-4 shadow-lg hover:bg-blue-700 transition"
-      >
-        <AiOutlinePlus className="text-2xl" />
-      </button>
+        )}
+      </main>
     </div>
   );
 }
