@@ -17,6 +17,7 @@ import Users from "./pages/Users";
 import UserDetail from "./pages/UserDetail";
 import { Toaster } from "react-hot-toast";
 
+// 👇 Wrap routes in AnimatePresence for page transitions
 function AppRoutes({ session }: { session: Session | null }) {
   const location = useLocation();
 
@@ -88,19 +89,20 @@ export default function App() {
 
   useEffect(() => {
     const loadSession = async () => {
-      const { data } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
+      if (error) console.error("Failed to get session:", error);
       setSession(data.session ?? null);
       setLoading(false);
     };
 
     loadSession();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
     });
 
     return () => {
-      listener.subscription.unsubscribe();
+      authListener.subscription?.unsubscribe();
     };
   }, []);
 
