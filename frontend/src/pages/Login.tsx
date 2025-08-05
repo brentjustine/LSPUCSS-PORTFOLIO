@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabaseClient";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -70,6 +71,7 @@ export default function Login() {
           {info && <div className="text-sm text-green-500 bg-green-100 text-green-900 p-3 rounded mb-3">{info}</div>}
 
           <form onSubmit={handleLogin} className="space-y-4">
+            {/* Email Input */}
             <input
               type="email"
               placeholder="Email"
@@ -78,14 +80,28 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-            <input
-              type="password"
-              placeholder="Password"
-              className="w-full p-3 rounded bg-gray-800 text-white border border-gray-700"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+
+            {/* Password Input with Eye Icon */}
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                className="w-full p-3 rounded bg-gray-800 text-white border border-gray-700 pr-10"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(prev => !prev)}
+                className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 hover:text-white focus:outline-none"
+                tabIndex={-1}
+              >
+                <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
+              </button>
+            </div>
+
+            {/* Submit */}
             <button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded font-semibold"
@@ -94,6 +110,7 @@ export default function Login() {
             </button>
           </form>
 
+          {/* Bottom Links */}
           <div className="mt-6 text-sm text-center space-y-2 text-gray-400">
             <p>
               Not yet registered?{" "}

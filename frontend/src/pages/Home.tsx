@@ -202,12 +202,12 @@ export default function Home() {
           </button>
         </header>
 
-        <div className="flex gap-2 border-b pb-2 mb-4 overflow-x-auto">
+        <div className="flex gap-2 border-b pb-2 mb-4 overflow-x-auto md:hidden">
           {TABS.map((tab) => (
             <button
               key={tab.name}
               onClick={() => setActiveTab(tab.name)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-t font-semibold transition-all text-sm md:text-base ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-t font-semibold transition-all text-sm ${
                 activeTab === tab.name ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-800"
               }`}
             >
@@ -216,6 +216,7 @@ export default function Home() {
             </button>
           ))}
         </div>
+
 
         {/* Loading */}
         {loading && (

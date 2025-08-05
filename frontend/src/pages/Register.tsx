@@ -9,9 +9,11 @@ export default function Register() {
     email: "",
     password: "",
   });
+
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // 👈 password visibility toggle
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,7 +102,7 @@ export default function Register() {
             onChange={handleChange}
             placeholder="Full Name"
             required
-            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder-black"
           />
 
           <input
@@ -110,18 +112,28 @@ export default function Register() {
             onChange={handleChange}
             placeholder="Email"
             required
-            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder-black"
           />
 
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            placeholder="Password"
-            required
-            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          {/* Password with toggle eye */}
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              placeholder="Password"
+              required
+              className="w-full p-3 pr-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder-black"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-600"
+            >
+              {showPassword ? "🙈" : "👁️"}
+            </button>
+          </div>
 
           <div className="text-sm font-semibold text-gray-700">Optional Profile Picture</div>
           <label className="cursor-pointer border-dashed border-2 border-gray-300 rounded-xl flex flex-col items-center justify-center p-4 hover:border-blue-400 transition">
