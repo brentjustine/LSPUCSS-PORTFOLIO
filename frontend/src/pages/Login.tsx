@@ -47,7 +47,7 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-auto lg:h-screen">
+    <div className="flex flex-col lg:flex-row min-h-screen">
       {/* Left Side */}
       <div className="w-full lg:w-1/2 h-1/2 lg:h-full bg-gradient-to-br from-blue-600 to-green-500 text-white flex flex-col justify-center items-center p-10">
         <img src="/logo.png" alt="Logo" className="w-32 mb-4" />
