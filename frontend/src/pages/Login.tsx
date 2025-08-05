@@ -23,7 +23,7 @@ export default function Login() {
     if (error) {
       setError(error.message);
     } else {
-      navigate("/dashboard");
+      navigate("/");
     }
   };
 
@@ -47,20 +47,22 @@ export default function Login() {
   };
 
   return (
-    <div className="flex h-screen">
-      {/* Left Side Branding */}
-      <div className="w-1/2 bg-gradient-to-br from-blue-600 to-green-500 text-white flex flex-col justify-center items-center p-10">
+    <div className="flex flex-col lg:flex-row h-auto lg:h-screen">
+      {/* Left Side */}
+      <div className="w-full lg:w-1/2 h-1/2 lg:h-full bg-gradient-to-br from-blue-600 to-green-500 text-white flex flex-col justify-center items-center p-10">
         <img src="/logo.png" alt="Logo" className="w-32 mb-4" />
-        <h1 className="text-3xl font-bold text-center">SIGN-IN TO YOUR<br />LSPU ACCOUNT</h1>
-        <p className="mt-4 text-sm">LSPU Student Portal</p>
+        <h1 className="text-3xl font-bold text-center">
+          SIGN-IN TO YOUR<br />LSPU ACCOUNT
+        </h1>
+        <p className="mt-4 text-sm">LSPU Student Portfolio</p>
         <div className="flex space-x-4 mt-6 text-xl">
-          <a href="#"><i className="fab fa-facebook-f"></i></a>
-          <a href="#"><i className="fab fa-youtube"></i></a>
+          <a href="#"><i className="fab fa-facebook-f" /></a>
+          <a href="#"><i className="fab fa-youtube" /></a>
         </div>
       </div>
 
-      {/* Right Side Login Card */}
-      <div className="w-1/2 bg-black/90 text-white flex items-center justify-center p-10">
+      {/* Right Side */}
+      <div className="w-full lg:w-1/2 h-1/2 lg:h-full bg-black/90 text-white flex items-center justify-center p-10">
         <div className="bg-gray-900 p-8 rounded-lg shadow-xl w-full max-w-md">
           <h2 className="text-2xl font-bold text-center mb-6">🔐 Login</h2>
 
