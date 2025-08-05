@@ -7,7 +7,7 @@ import {
   BarChart, Bar, XAxis, YAxis, ResponsiveContainer,
 } from "recharts";
 import {
-  AiOutlineAppstore, AiOutlineRobot, AiOutlinePlus, AiOutlineMenu,
+  AiOutlineAppstore, AiOutlineRobot, AiOutlinePlus,
 } from "react-icons/ai";
 import toast from "react-hot-toast";
 
@@ -31,15 +31,12 @@ const toastConfirm = (message: string) =>
     ));
   });
 
-// ... (imports remain unchanged)
-
 export default function Home() {
   const [activeTab, setActiveTab] = useState("Projects");
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [selectedProjects, setSelectedProjects] = useState<Set<number>>(new Set());
-
   const navigate = useNavigate();
 
   const getUser = async () => {
@@ -47,7 +44,7 @@ export default function Home() {
     return data?.user;
   };
 
-  const fetchProjects = async (refreshAISummary = false) => {
+  const fetchProjects = async () => {
     const user = await getUser();
     if (!user) return toast.error("Authentication failed.");
 
@@ -55,18 +52,21 @@ export default function Home() {
     if (error) return toast.error("Failed to fetch projects.");
 
     setProjects(data || []);
-    if (refreshAISummary) fetchAISummary(user.id, data?.length || 0);
     setLoading(false);
+
+    if (!data || data.length === 0) {
+      setAiSummary(null);
+      return;
+    }
+
+    await fetchAISummary(user.id);
   };
 
-  const fetchAISummary = async (userId: string, projectCount: number) => {
+  const fetchAISummary = async (userId: string) => {
     try {
       const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/summary?user_id=${userId}`);
       const json = await res.json();
-      const summary = json.summary || "No summary available.";
-      setAiSummary(summary);
-      localStorage.setItem(`aiSummary:${userId}`, summary);
-      localStorage.setItem(`projectsCount:${userId}`, projectCount.toString());
+      setAiSummary(json.summary || "No summary available.");
     } catch {
       setAiSummary("Failed to fetch summary.");
     }
@@ -74,10 +74,6 @@ export default function Home() {
 
   useEffect(() => {
     const init = async () => {
-      const user = await getUser();
-      if (!user) return;
-      const cached = localStorage.getItem(`aiSummary:${user.id}`);
-      if (cached) setAiSummary(cached);
       await fetchProjects();
     };
 
@@ -85,23 +81,11 @@ export default function Home() {
 
     const subscription = supabase
       .channel("public:projects")
-      .on("postgres_changes", { event: "*", schema: "public", table: "projects" }, () => fetchProjects())
+      .on("postgres_changes", { event: "*", schema: "public", table: "projects" }, fetchProjects)
       .subscribe();
 
     return () => supabase.removeChannel(subscription);
   }, []);
-
-  useEffect(() => {
-    const refresh = async () => {
-      const user = await getUser();
-      if (!user) return;
-      if (localStorage.getItem("ai_refresh_needed") === "true") {
-        await fetchAISummary(user.id, projects.length);
-        localStorage.setItem("ai_refresh_needed", "false");
-      }
-    };
-    refresh();
-  }, [projects]);
 
   const toggleSelectProject = (id: number) => {
     setSelectedProjects((prev) => {
@@ -143,16 +127,8 @@ export default function Home() {
     toast.success("Deleted successfully.");
     setSelectedProjects(new Set());
 
-    setTimeout(async () => {
-      const user = await getUser();
-      if (user) {
-        localStorage.removeItem(`aiSummary:${user.id}`);
-        localStorage.removeItem(`projectsCount:${user.id}`);
-        localStorage.setItem("ai_refresh_needed", "true");
-        await fetchProjects(true);
-      }
-      setLoading(false);
-    }, 1000);
+    await fetchProjects(); // Triggers re-generation or removal of summary
+    setLoading(false);
   };
 
   const averageScore = projects.length > 0
@@ -171,7 +147,6 @@ export default function Home() {
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar - always visible on all devices */}
       <aside className="hidden md:block w-64 bg-white shadow h-full">
         <div className="p-6 font-bold text-xl text-gray-800">LSPU Online</div>
         <nav className="space-y-4 p-4 text-gray-700">
@@ -190,7 +165,6 @@ export default function Home() {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 bg-gray-50 p-4 md:p-6 overflow-y-auto">
         <header className="flex justify-between items-center mb-6">
           <h1 className="text-xl md:text-2xl font-bold">My Projects Dashboard</h1>
@@ -217,13 +191,10 @@ export default function Home() {
           ))}
         </div>
 
-
-        {/* Loading */}
         {loading && (
           <div className="text-center py-10 text-gray-500 animate-pulse">⏳ Loading projects...</div>
         )}
 
-        {/* Projects Tab */}
         {!loading && activeTab === "Projects" && (
           <div>
             {selectedProjects.size > 0 && (
@@ -265,7 +236,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* AI Overview Tab */}
         {!loading && activeTab === "AI Overview" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
