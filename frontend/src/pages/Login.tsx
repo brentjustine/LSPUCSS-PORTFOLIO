@@ -5,7 +5,7 @@ import { supabase } from "../lib/supabaseClient";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // 👈 emoji toggle
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -81,23 +81,22 @@ export default function Login() {
               required
             />
 
-            {/* Password Input with Eye Icon */}
+            {/* Password Input with Emoji Toggle */}
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
-                className="w-full p-3 rounded bg-gray-800 text-white border border-gray-700 pr-10"
+                className="w-full p-3 pr-10 rounded bg-gray-800 text-white border border-gray-700"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
               <button
                 type="button"
-                onClick={() => setShowPassword(prev => !prev)}
-                className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 hover:text-white focus:outline-none"
-                tabIndex={-1}
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute top-1/2 right-3 transform -translate-y-1/2 text-white"
               >
-                <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
+                {showPassword ? "🙈" : "👁️"}
               </button>
             </div>
 

@@ -13,7 +13,7 @@ export default function Register() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // 👈 password visibility toggle
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,8 +91,8 @@ export default function Register() {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-blue-600 to-green-500 justify-center items-center px-4">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg">
-        <h2 className="text-3xl font-bold text-center text-blue-700 mb-6">📝 Create Account</h2>
+      <div className="bg-black p-8 rounded-2xl shadow-xl w-full max-w-lg">
+        <h2 className="text-3xl font-bold text-center text-white mb-6">📝 Create Account</h2>
 
         <form onSubmit={handleRegister} className="space-y-5">
           <input
@@ -102,7 +102,7 @@ export default function Register() {
             onChange={handleChange}
             placeholder="Full Name"
             required
-            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder-black"
+            className="w-full p-3 border border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400 bg-black"
           />
 
           <input
@@ -112,10 +112,9 @@ export default function Register() {
             onChange={handleChange}
             placeholder="Email"
             required
-            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder-black"
+            className="w-full p-3 border border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400 bg-black"
           />
 
-          {/* Password with toggle eye */}
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
@@ -124,19 +123,19 @@ export default function Register() {
               onChange={handleChange}
               placeholder="Password"
               required
-              className="w-full p-3 pr-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder-black"
+              className="w-full p-3 pr-10 border border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400 bg-black"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-600"
+              className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400"
             >
               {showPassword ? "🙈" : "👁️"}
             </button>
           </div>
 
-          <div className="text-sm font-semibold text-gray-700">Optional Profile Picture</div>
-          <label className="cursor-pointer border-dashed border-2 border-gray-300 rounded-xl flex flex-col items-center justify-center p-4 hover:border-blue-400 transition">
+          <div className="text-sm font-semibold text-gray-300">Optional Profile Picture</div>
+          <label className="cursor-pointer border-dashed border-2 border-gray-600 rounded-xl flex flex-col items-center justify-center p-4 hover:border-blue-400 transition">
             {previewUrl ? (
               <img
                 src={previewUrl}
@@ -166,3 +165,4 @@ export default function Register() {
     </div>
   );
 }
+
