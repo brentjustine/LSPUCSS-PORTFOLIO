@@ -33,10 +33,13 @@ export default function UpdatePassword() {
     if (error) {
       setError(error.message);
     } else {
-      setSuccess("✅ Password updated! Redirecting...");
+      await supabase.auth.signOut(); // 🚪 log the user out right after update
+      setSuccess("✅ Password updated! You have been logged out.");
+      // optionally redirect to login
       setTimeout(() => navigate("/login"), 2000);
     }
   };
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-600 to-green-500 px-4">
