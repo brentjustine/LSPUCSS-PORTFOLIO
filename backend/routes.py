@@ -64,10 +64,12 @@ async def get_suggestion(title: str):
 async def get_summary(request: Request):
     try:
         user_id = request.query_params.get("user_id")
+        refresh = request.query_params.get("refresh", "false").lower() == "true"
+
         if not user_id:
             raise HTTPException(status_code=400, detail="Missing user_id")
 
-        print(f"🔍 Getting summary for user_id={user_id}")
+        print(f"🔍 Getting summary for user_id={user_id} | refresh={refresh}")
 
         # 🧼 Check if user still has projects
         response = supabase.table("projects").select("*").eq("user_id", user_id).execute()
@@ -76,13 +78,15 @@ async def get_summary(request: Request):
             print("🚫 No projects found. Skipping summary.")
             raise HTTPException(status_code=404, detail="No projects found for summary.")
 
-        # ✅ Use cached summary if available
-        cached = supabase.table("user_summaries").select("*").eq("user_id", user_id).limit(1).execute()
-        if cached.data and len(cached.data) > 0:
-            print("✅ Using cached summary")
-            return {"summary": cached.data[0]["summary"]}
+        # ✅ Use cached summary if available AND not forcing refresh
+        if not refresh:
+            cached = supabase.table("user_summaries").select("*").eq("user_id", user_id).limit(1).execute()
+            if cached.data and len(cached.data) > 0:
+                print("✅ Using cached summary")
+                return {"summary": cached.data[0]["summary"]}
 
         # ⏳ Generate new summary
+        print("♻️ Generating new summary...")
         summary = await summarize_overall_insights(projects)
         if not summary:
             raise HTTPException(status_code=500, detail="AI failed to generate summary")
@@ -98,12 +102,3 @@ async def get_summary(request: Request):
     except Exception as e:
         print("❌ Summary error:", e)
         raise HTTPException(status_code=500, detail=str(e))
-
-@router.delete("/summary")
-async def delete_summary(request: Request):
-    user_id = request.query_params.get("user_id")
-    if not user_id:
-        raise HTTPException(status_code=400, detail="Missing user_id")
-
-    supabase.table("user_summaries").delete().eq("user_id", user_id).execute()
-    return {"message": "Summary deleted"}

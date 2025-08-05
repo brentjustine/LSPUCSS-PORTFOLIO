@@ -70,12 +70,11 @@ export default function Home() {
 
 
 
-  const fetchAISummary = async (userId: string) => {
+  const fetchAISummary = async (userId: string, refresh = false) => {
     try {
       setAiLoading(true);
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/summary?user_id=${userId}`);
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/summary?user_id=${userId}${refresh ? "&refresh=true" : ""}`);
       const json = await res.json();
-
       setAiSummary(json.summary || "No summary available.");
     } catch (err) {
       console.error("Error fetching summary:", err);
@@ -84,6 +83,7 @@ export default function Home() {
       setAiLoading(false);
     }
   };
+
 
 
   useEffect(() => {
