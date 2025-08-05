@@ -47,11 +47,11 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen">
-      {/* Left Side */}
-      <div className="w-full lg:w-1/2 h-1/2 lg:h-full bg-gradient-to-br from-blue-600 to-green-500 text-white flex flex-col justify-center items-center p-10">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-gradient-to-br from-blue-600 to-green-500 text-white">
+      {/* Left Section */}
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-10 text-center">
         <img src="/logo.png" alt="Logo" className="w-32 mb-4" />
-        <h1 className="text-3xl font-bold text-center">
+        <h1 className="text-3xl font-bold leading-tight">
           SIGN-IN TO YOUR<br />LSPU ACCOUNT
         </h1>
         <p className="mt-4 text-sm">LSPU Student Portfolio</p>
@@ -61,9 +61,9 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Right Side */}
-      <div className="w-full lg:w-1/2 h-1/2 lg:h-full bg-black/90 text-white flex items-center justify-center p-10">
-        <div className="bg-gray-900 p-8 rounded-lg shadow-xl w-full max-w-md">
+      {/* Right Section */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6">
+        <div className="bg-black/90 text-white p-8 rounded-lg shadow-xl w-full max-w-md">
           <h2 className="text-2xl font-bold text-center mb-6">🔐 Login</h2>
 
           {error && <div className="text-sm text-red-500 bg-red-100 text-red-900 p-3 rounded mb-3">{error}</div>}
