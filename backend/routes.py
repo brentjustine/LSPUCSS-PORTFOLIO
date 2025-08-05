@@ -93,3 +93,11 @@ async def get_summary(request: Request):
         print("❌ Summary error:", e)
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.delete("/summary")
+async def delete_summary(request: Request):
+    user_id = request.query_params.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Missing user_id")
+
+    supabase.table("user_summaries").delete().eq("user_id", user_id).execute()
+    return {"message": "Summary deleted"}
