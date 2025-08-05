@@ -44,7 +44,8 @@ export default function Home() {
     return data?.user;
   };
 
- const fetchProjects = async () => {
+  const fetchProjects = async () => {
+    const user = await getUser(); // ✅ Get the user here
     if (!user) return;
 
     try {
