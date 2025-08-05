@@ -34,8 +34,8 @@ export default function ProjectDetail() {
     fetchProject();
   }, [id]);
 
-  if (loading) return <div className="text-center mt-10">Loading...</div>;
-  if (!project) return <div className="text-center mt-10 text-red-500">Project not found.</div>;
+  if (loading) return <div className="text-center mt-20 text-gray-600">Loading project...</div>;
+  if (!project) return <div className="text-center mt-20 text-red-500">Project not found.</div>;
 
   const safeScore = project.ai_score ?? 0;
 
@@ -56,13 +56,13 @@ export default function ProjectDetail() {
       : project.description;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
-      <div className="bg-white rounded-xl shadow-md p-6 space-y-10">
+    <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4">
+      <div className="bg-white p-8 rounded-xl shadow-lg max-w-3xl w-full space-y-8">
         {/* Title */}
         <h1 className="text-3xl font-bold text-center text-gray-800">{project.title}</h1>
 
         {/* AI Score */}
-        <div className="flex justify-center items-center flex-col space-y-2">
+        <div className="flex flex-col items-center space-y-2">
           <h2 className="text-lg font-semibold text-gray-700">AI Score</h2>
           <div className="relative">
             <PieChart width={200} height={200}>
@@ -87,13 +87,13 @@ export default function ProjectDetail() {
 
         {/* Description */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-700 mb-1">Project Description</h2>
+          <h2 className="text-lg font-semibold text-gray-700 mb-2">📄 Project Description</h2>
           <p className="text-gray-600 text-sm leading-relaxed">
             {truncatedDescription}
             {project.description.length > 150 && (
               <span
                 onClick={() => setShowFullDescription(!showFullDescription)}
-                className="text-blue-500 ml-1 cursor-pointer underline"
+                className="text-blue-600 ml-2 cursor-pointer underline"
               >
                 {showFullDescription ? "Show less" : "Read more"}
               </span>
@@ -103,7 +103,7 @@ export default function ProjectDetail() {
 
         {/* AI Suggestions */}
         <div>
-          <h2 className="text-lg font-semibold text-green-700 mb-4">🌟 AI Suggestions</h2>
+          <h2 className="text-lg font-semibold text-green-700 mb-3">🌟 AI Suggestions</h2>
           {suggestions.length > 0 ? (
             <div className="space-y-4">
               {suggestions.map((s, index) => {

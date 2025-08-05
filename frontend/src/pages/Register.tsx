@@ -29,7 +29,6 @@ export default function Register() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     let profilePicUrl = "";
 
     try {
@@ -71,7 +70,8 @@ export default function Register() {
         toast.error("❌ Failed to retrieve user ID after signup");
         return;
       }
-      await supabase.from('profiles').upsert({
+
+      await supabase.from("profiles").upsert({
         id: userId,
         full_name: form.full_name,
         profile_picture_url: profilePicUrl || null,
@@ -88,68 +88,69 @@ export default function Register() {
   };
 
   return (
-    <form
-      onSubmit={handleRegister}
-      className="max-w-md mx-auto mt-12 bg-white p-6 rounded-2xl shadow-xl space-y-6 animate-fade-in"
-    >
-      <h2 className="text-3xl font-bold text-center text-blue-700">📝 Register</h2>
+    <div className="flex min-h-screen bg-gradient-to-br from-blue-600 to-green-500 justify-center items-center px-4">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg">
+        <h2 className="text-3xl font-bold text-center text-blue-700 mb-6">📝 Create Account</h2>
 
-      <input
-        type="text"
-        name="full_name"
-        value={form.full_name}
-        onChange={handleChange}
-        placeholder="Full Name"
-        required
-        className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-
-      <input
-        type="email"
-        name="email"
-        value={form.email}
-        onChange={handleChange}
-        placeholder="Email"
-        required
-        className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-
-      <input
-        type="password"
-        name="password"
-        value={form.password}
-        onChange={handleChange}
-        placeholder="Password"
-        required
-        className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-
-      <div className="text-sm font-semibold text-gray-700">Optional Profile Picture</div>
-      <label className="cursor-pointer border-dashed border-2 border-gray-300 rounded-xl flex flex-col items-center justify-center p-4 hover:border-blue-400 transition">
-        {previewUrl ? (
-          <img
-            src={previewUrl}
-            alt="Preview"
-            className="w-24 h-24 rounded-full object-cover shadow"
+        <form onSubmit={handleRegister} className="space-y-5">
+          <input
+            type="text"
+            name="full_name"
+            value={form.full_name}
+            onChange={handleChange}
+            placeholder="Full Name"
+            required
+            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-        ) : (
-          <div className="text-gray-400 text-center">
-            <span className="text-4xl">📁</span>
-            <p className="mt-1">Click to upload</p>
-          </div>
-        )}
-        <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-      </label>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className={`w-full py-2 rounded-lg font-semibold text-white transition ${
-          loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-        }`}
-      >
-        {loading ? "Registering..." : "🚀 Register"}
-      </button>
-    </form>
+          <input
+            type="email"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            placeholder="Email"
+            required
+            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          <input
+            type="password"
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            placeholder="Password"
+            required
+            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          <div className="text-sm font-semibold text-gray-700">Optional Profile Picture</div>
+          <label className="cursor-pointer border-dashed border-2 border-gray-300 rounded-xl flex flex-col items-center justify-center p-4 hover:border-blue-400 transition">
+            {previewUrl ? (
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="w-24 h-24 rounded-full object-cover shadow"
+              />
+            ) : (
+              <div className="text-gray-400 text-center">
+                <span className="text-4xl">📁</span>
+                <p className="mt-1">Click to upload</p>
+              </div>
+            )}
+            <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+          </label>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full py-2 rounded-lg font-semibold text-white transition ${
+              loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+            }`}
+          >
+            {loading ? "Registering..." : "🚀 Register"}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }

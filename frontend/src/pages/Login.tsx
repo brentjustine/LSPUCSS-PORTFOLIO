@@ -9,11 +9,10 @@ export default function Login() {
   const [info, setInfo] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Lock scroll when login page is mounted
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = "auto"; // Reset scroll when leaving
+      document.body.style.overflow = "auto";
     };
   }, []);
 
@@ -24,7 +23,7 @@ export default function Login() {
     if (error) {
       setError(error.message);
     } else {
-      navigate("/");
+      navigate("/dashboard");
     }
   };
 
@@ -48,55 +47,69 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 px-4 py-8 flex justify-center">
-      <div className="bg-white p-6 rounded-xl shadow w-full max-w-md self-start">
-        <h1 className="text-2xl font-bold mb-4 text-center">🔐 Login</h1>
+    <div className="flex h-screen">
+      {/* Left Side Branding */}
+      <div className="w-1/2 bg-gradient-to-br from-blue-600 to-green-500 text-white flex flex-col justify-center items-center p-10">
+        <img src="/logo.png" alt="Logo" className="w-32 mb-4" />
+        <h1 className="text-3xl font-bold text-center">SIGN-IN TO YOUR<br />LSPU ACCOUNT</h1>
+        <p className="mt-4 text-sm">LSPU Student Portal</p>
+        <div className="flex space-x-4 mt-6 text-xl">
+          <a href="#"><i className="fab fa-facebook-f"></i></a>
+          <a href="#"><i className="fab fa-youtube"></i></a>
+        </div>
+      </div>
 
-        {error && <div className="text-sm text-red-600 bg-red-100 p-3 rounded mb-3">{error}</div>}
-        {info && <div className="text-sm text-green-600 bg-green-100 p-3 rounded mb-3">{info}</div>}
+      {/* Right Side Login Card */}
+      <div className="w-1/2 bg-black/90 text-white flex items-center justify-center p-10">
+        <div className="bg-gray-900 p-8 rounded-lg shadow-xl w-full max-w-md">
+          <h2 className="text-2xl font-bold text-center mb-6">🔐 Login</h2>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email"
-            className="w-full p-2 border rounded"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full p-2 border rounded"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition"
-          >
-            Login
-          </button>
-        </form>
+          {error && <div className="text-sm text-red-500 bg-red-100 text-red-900 p-3 rounded mb-3">{error}</div>}
+          {info && <div className="text-sm text-green-500 bg-green-100 text-green-900 p-3 rounded mb-3">{info}</div>}
 
-        <div className="mt-4 text-center text-sm text-gray-600 space-y-2">
-          <p>
-            Not yet registered?{" "}
-            <Link to="/register" className="text-blue-600 hover:underline">
-              Register here
-            </Link>
-          </p>
-          <p>
-            Forgot your password?{" "}
+          <form onSubmit={handleLogin} className="space-y-4">
+            <input
+              type="email"
+              placeholder="Email"
+              className="w-full p-3 rounded bg-gray-800 text-white border border-gray-700"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              className="w-full p-3 rounded bg-gray-800 text-white border border-gray-700"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
             <button
-              type="button"
-              className="text-blue-600 hover:underline"
-              onClick={handleForgotPassword}
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded font-semibold"
             >
-              Reset it
+              Login
             </button>
-          </p>
+          </form>
+
+          <div className="mt-6 text-sm text-center space-y-2 text-gray-400">
+            <p>
+              Not yet registered?{" "}
+              <Link to="/register" className="text-blue-400 hover:underline">
+                Register here
+              </Link>
+            </p>
+            <p>
+              Forgot your password?{" "}
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="text-blue-400 hover:underline"
+              >
+                Reset it
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>
