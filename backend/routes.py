@@ -48,6 +48,7 @@ async def get_projects():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
 # 🧠 Return learning path suggestion using AI
 @router.get("/suggestion")
 async def get_suggestion(title: str):
