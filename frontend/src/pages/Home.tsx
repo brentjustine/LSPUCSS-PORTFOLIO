@@ -46,8 +46,11 @@ export default function Home() {
   };
 
   const fetchProjects = async () => {
-    const user = await getUser(); // ✅ Get the user here
-    if (!user) return;
+    const user = await getUser();
+    if (!user) {
+      setLoading(false); // Important: stop loading if no user
+      return;
+    }
 
     try {
       const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/projects`);
@@ -56,13 +59,15 @@ export default function Home() {
       const userProjects = data.filter((p: any) => p.user_id === user.id);
       setProjects(userProjects);
 
-      // ✅ Always fetch the AI summary — even if there are no projects
       await fetchAISummary(user.id);
     } catch (err) {
       console.error("Error fetching projects:", err);
       setAiSummary("Failed to fetch summary.");
+    } finally {
+      setLoading(false); // ✅ ALWAYS stop loading, even if error
     }
   };
+
 
 
   const fetchAISummary = async (userId: string) => {
