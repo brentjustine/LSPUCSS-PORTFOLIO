@@ -7,7 +7,7 @@ import {
   BarChart, Bar, XAxis, YAxis, ResponsiveContainer,
 } from "recharts";
 import {
-  AiOutlineAppstore, AiOutlineRobot, AiOutlinePlus,
+  AiOutlineAppstore, AiOutlineRobot, AiOutlinePlus, AiOutlineMenu,
 } from "react-icons/ai";
 import toast from "react-hot-toast";
 
@@ -37,6 +37,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [selectedProjects, setSelectedProjects] = useState<Set<number>>(new Set());
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -62,7 +63,6 @@ export default function Home() {
       const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/summary?user_id=${userId}`);
       const json = await res.json();
       const summary = json.summary || "No summary available.";
-
       setAiSummary(summary);
       localStorage.setItem(`aiSummary:${userId}`, summary);
       localStorage.setItem(`projectsCount:${userId}`, projectCount.toString());
@@ -126,6 +126,7 @@ export default function Home() {
         return [];
       }
     });
+
     if (paths.length > 0) {
       const { error } = await supabase.storage.from("projects").remove(paths);
       if (error) return toast.error("Storage delete failed: " + error.message);
@@ -169,22 +170,39 @@ export default function Home() {
 
   return (
     <div className="flex h-screen">
+      {/* Mobile Menu Button */}
+      <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden absolute top-4 left-4 z-50">
+        <AiOutlineMenu className="text-2xl" />
+      </button>
+
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow h-full">
+      <aside className={`fixed md:static z-40 w-64 bg-white shadow h-full transition-transform duration-300 ${
+        sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      }`}>
         <div className="p-6 font-bold text-xl text-gray-800">LSPU Online</div>
         <nav className="space-y-4 p-4 text-gray-700">
-          <a href="#" className="flex items-center space-x-2 hover:text-blue-600">📁 <span>Projects</span></a>
-          <a href="#" className="flex items-center space-x-2">📊 <span>AI Overview</span></a>
+          {TABS.map((tab) => (
+            <button
+              key={tab.name}
+              onClick={() => { setActiveTab(tab.name); setSidebarOpen(false); }}
+              className={`flex items-center space-x-2 w-full text-left px-3 py-2 rounded transition ${
+                activeTab === tab.name ? "bg-blue-100 text-blue-600" : "hover:bg-gray-100"
+              }`}
+            >
+              {tab.icon}
+              <span>{tab.name}</span>
+            </button>
+          ))}
         </nav>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 bg-gray-50 p-6 overflow-y-auto">
+      <main className="flex-1 bg-gray-50 p-4 md:p-6 overflow-y-auto">
         <header className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">My Projects Dashboard</h1>
+          <h1 className="text-xl md:text-2xl font-bold">My Projects Dashboard</h1>
           <button
             onClick={() => navigate("/submit")}
-            className="bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700"
+            className="bg-blue-600 text-white rounded px-3 md:px-4 py-2 hover:bg-blue-700 text-sm md:text-base"
           >
             <AiOutlinePlus className="inline-block mr-1" /> New Project
           </button>
@@ -206,8 +224,12 @@ export default function Home() {
           ))}
         </div>
 
-        {loading && <div className="text-center py-10 text-gray-500 animate-pulse">⏳ Loading projects...</div>}
+        {/* Loading */}
+        {loading && (
+          <div className="text-center py-10 text-gray-500 animate-pulse">⏳ Loading projects...</div>
+        )}
 
+        {/* Projects Tab */}
         {!loading && activeTab === "Projects" && (
           <div>
             {selectedProjects.size > 0 && (
@@ -218,7 +240,6 @@ export default function Home() {
                 Delete Selected ({selectedProjects.size})
               </button>
             )}
-
             <div className="space-y-4">
               {projects.length === 0 ? (
                 <div className="text-center py-20 text-gray-500 space-y-4">
@@ -250,6 +271,7 @@ export default function Home() {
           </div>
         )}
 
+        {/* AI Overview Tab */}
         {!loading && activeTab === "AI Overview" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
