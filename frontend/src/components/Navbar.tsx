@@ -73,9 +73,11 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between">
         {/* Left section: brand + search */}
         <div className="flex items-center gap-6 flex-1">
-          <Link to="/" className="text-xl sm:text-2xl font-bold tracking-wide hover:opacity-90">
-            📚 LSPU CCS PORTFOLIO
+          <Link to="/" className="flex items-center gap-2 text-xl sm:text-2xl font-bold tracking-wide hover:opacity-90">
+            <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+            LSPU CCS PORTFOLIO
           </Link>
+
 
           {user && (
             <form
