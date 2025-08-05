@@ -15,6 +15,10 @@ router = APIRouter()
 @router.post("/submit")
 async def submit_project(project: ProjectIn):
     try:
+        # ❌ Delete old cached summary
+        supabase.table("user_summaries").delete().eq("user_id", project.user_id).execute()
+
+        # ✅ Generate AI feedback
         ai_score = await generate_ai_score()
         ai_suggestions = await generate_suggestions(project.description, project.file_url)
         ai_learning_path = await suggest_learning_path(
@@ -28,6 +32,7 @@ async def submit_project(project: ProjectIn):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 # 📦 Return all projects, newest first
