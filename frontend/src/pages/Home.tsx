@@ -31,13 +31,14 @@ const toastConfirm = (message: string) =>
     ));
   });
 
+// ... (imports remain unchanged)
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState("Projects");
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [selectedProjects, setSelectedProjects] = useState<Set<number>>(new Set());
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -170,21 +171,14 @@ export default function Home() {
 
   return (
     <div className="flex h-screen">
-      {/* Mobile Menu Button */}
-      <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden absolute top-4 left-4 z-50">
-        <AiOutlineMenu className="text-2xl" />
-      </button>
-
-      {/* Sidebar */}
-      <aside className={`fixed md:static z-40 w-64 bg-white shadow h-full transition-transform duration-300 ${
-        sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-      }`}>
+      {/* Sidebar - always visible on all devices */}
+      <aside className="w-64 bg-white shadow h-full">
         <div className="p-6 font-bold text-xl text-gray-800">LSPU Online</div>
         <nav className="space-y-4 p-4 text-gray-700">
           {TABS.map((tab) => (
             <button
               key={tab.name}
-              onClick={() => { setActiveTab(tab.name); setSidebarOpen(false); }}
+              onClick={() => setActiveTab(tab.name)}
               className={`flex items-center space-x-2 w-full text-left px-3 py-2 rounded transition ${
                 activeTab === tab.name ? "bg-blue-100 text-blue-600" : "hover:bg-gray-100"
               }`}
@@ -208,7 +202,6 @@ export default function Home() {
           </button>
         </header>
 
-        {/* Tabs */}
         <div className="flex gap-2 border-b pb-2 mb-4 overflow-x-auto">
           {TABS.map((tab) => (
             <button
