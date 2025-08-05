@@ -172,7 +172,7 @@ export default function Home() {
   return (
     <div className="flex h-screen">
       {/* Sidebar - always visible on all devices */}
-      <aside className="w-64 bg-white shadow h-full">
+      <aside className="hidden md:block w-64 bg-white shadow h-full">
         <div className="p-6 font-bold text-xl text-gray-800">LSPU Online</div>
         <nav className="space-y-4 p-4 text-gray-700">
           {TABS.map((tab) => (
