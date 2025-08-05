@@ -44,33 +44,40 @@ export default function Home() {
     return data?.user;
   };
 
-  const fetchProjects = async () => {
-    const user = await getUser();
-    if (!user) return toast.error("Authentication failed.");
+ const fetchProjects = async () => {
+    if (!user) return;
 
-    const { data, error } = await supabase.from("projects").select("*").eq("user_id", user.id);
-    if (error) return toast.error("Failed to fetch projects.");
-
-    setProjects(data || []);
-    setLoading(false);
-
-    if (!data || data.length === 0) {
-      setAiSummary(null);
-      return;
-    }
-
-    await fetchAISummary(user.id);
-  };
-
-  const fetchAISummary = async (userId: string) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/summary?user_id=${userId}`);
-      const json = await res.json();
-      setAiSummary(json.summary || "No summary available.");
-    } catch {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/projects`);
+      const data = await res.json();
+
+      const userProjects = data.filter((p: any) => p.user_id === user.id);
+      setProjects(userProjects);
+
+      // ✅ Always fetch the AI summary — even if there are no projects
+      await fetchAISummary(user.id);
+    } catch (err) {
+      console.error("Error fetching projects:", err);
       setAiSummary("Failed to fetch summary.");
     }
   };
+
+
+  const fetchAISummary = async (userId: string) => {
+    try {
+      setAiLoading(true);
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/summary?user_id=${userId}`);
+      const json = await res.json();
+
+      setAiSummary(json.summary || "No summary available.");
+    } catch (err) {
+      console.error("Error fetching summary:", err);
+      setAiSummary("Failed to fetch summary.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
 
   useEffect(() => {
     const init = async () => {
