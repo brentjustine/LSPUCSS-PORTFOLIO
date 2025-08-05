@@ -48,25 +48,28 @@ export default function Home() {
   const fetchProjects = async () => {
     const user = await getUser();
     if (!user) {
-      setLoading(false); // Important: stop loading if no user
+      setLoading(false);
       return;
     }
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/projects`);
-      const data = await res.json();
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*") // or list specific fields like "id, title, description, ai_score"
+        .eq("user_id", user.id);
 
-      const userProjects = data.filter((p: any) => p.user_id === user.id);
-      setProjects(userProjects);
+      if (error) throw error;
 
+      setProjects(data || []);
       await fetchAISummary(user.id);
     } catch (err) {
       console.error("Error fetching projects:", err);
       setAiSummary("Failed to fetch summary.");
     } finally {
-      setLoading(false); // ✅ ALWAYS stop loading, even if error
+      setLoading(false);
     }
   };
+
 
 
 
@@ -146,8 +149,9 @@ export default function Home() {
   };
 
   const averageScore = projects.length > 0
-    ? projects.reduce((acc, p) => acc + (p.ai_score || 0), 0) / projects.length
+    ? projects.reduce((acc, p) => acc + (p.ai_score ?? 0), 0) / projects.length
     : 0;
+
 
   const pieData = [
     { name: "Score", value: averageScore },
