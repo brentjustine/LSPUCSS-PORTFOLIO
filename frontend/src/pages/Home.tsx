@@ -36,6 +36,7 @@ export default function Home() {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const [selectedProjects, setSelectedProjects] = useState<Set<number>>(new Set());
   const navigate = useNavigate();
 
