@@ -55,10 +55,11 @@ export default function SubmitProject() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            user_id: user.id,                           // ✅ ADD THIS
             student_name: user.email,
             title: form.title,
             description: form.description,
-            file_url: uploadedFiles[0]?.url || null, // Just the first file for analysis
+            file_url: uploadedFiles[0]?.url || null,
           }),
         });
 
