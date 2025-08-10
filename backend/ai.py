@@ -12,16 +12,38 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-MISTRAL_MODEL = "Mixtral-8x7B-32k"
+async def generate_ai_score(description: str, file_url: str | None = None) -> float:
+    file_content = await extract_text_from_file_url(file_url) if file_url else ""
+    payload = {
+        "model": "llama3-8b-8192",
+        "messages": [
+            {
+                "role": "system",
+                "content": "You are a strict project evaluator. Rate the project from 1.0 to 10.0 based on quality, clarity, and completeness. Output only the numeric score, no words."
+            },
+            {
+                "role": "user",
+                "content": f"Project description: {description}\n\nFile contents: {file_content}\n\nWhat is the score?"
+            }
+        ],
+        "temperature": 0.0  # Keep deterministic for scoring
+    }
+    async with httpx.AsyncClient() as client:
+        res = await client.post(GROQ_API_URL, headers=HEADERS, json=payload)
+        res.raise_for_status()
+        score_text = res.json()["choices"][0]["message"]["content"].strip()
+    
+    try:
+        return float(score_text)
+    except ValueError:
+        # Fallback in case the AI outputs something unexpected
+        return 0.0
 
-
-async def generate_ai_score() -> float:
-    return 9.0
 
 async def generate_suggestions(description: str, file_url: str | None = None) -> str:
     file_content = await extract_text_from_file_url(file_url) if file_url else ""
     payload = {
-        "model": MISTRAL_MODEL,
+        "model": "llama3-8b-8192",
         "messages": [
             {"role": "system", "content": "Given the project title and description, evaluate the quality, give recommendations and provide a score and feedback."},
             {"role": "user", "content": f"Project description: {description}\n\nFile contents: {file_content}\n\nWhat are some suggestions for improving this project?"}
@@ -36,7 +58,7 @@ async def generate_suggestions(description: str, file_url: str | None = None) ->
 async def suggest_learning_path(title: str, description: str = "", file_url: str | None = None) -> str:
     file_content = await extract_text_from_file_url(file_url) if file_url else ""
     payload = {
-        "model": MISTRAL_MODEL,
+        "model": "llama3-8b-8192",
         "messages": [
             {"role": "system", "content": "You are a learning path recommendation assistant for programming students."},
             {"role": "user", "content": f"Title: {title}\nDescription: {description}\n\nFile content: {file_content}\n\nWhat should I learn next?"}
@@ -59,7 +81,7 @@ async def summarize_overall_insights(projects: list) -> str:
     """
 
     payload = {
-        "model": MISTRAL_MODEL,
+        "model": "llama3-8b-8192",
         "messages": [
             {"role": "system", "content": "You are a helpful AI tutor that summarizes student performance."},
             {"role": "user", "content": prompt}
