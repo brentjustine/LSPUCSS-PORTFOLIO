@@ -19,7 +19,7 @@ async def generate_ai_score(description: str, file_url: str | None = None) -> fl
         "messages": [
             {
                 "role": "system",
-                "content": "Given the project title and description, evaluate the quality, and provide a score. Output only the numeric score, no words."
+                "content": "Given the project title and description, evaluate the quality, and provide a score in 1/10. Output only the numeric score, no words."
             },
             {
                 "role": "user",
@@ -45,7 +45,7 @@ async def generate_suggestions(description: str, file_url: str | None = None) ->
     payload = {
         "model": "llama3-8b-8192",
         "messages": [
-            {"role": "system", "content": "Given the project title and description, evaluate the quality, give recommendations and provide a score and feedback."},
+            {"role": "system", "content": "Given the project title and description, evaluate the quality, give recommendations and provide a feedback."},
             {"role": "user", "content": f"Project description: {description}\n\nFile contents: {file_content}\n\nWhat are some suggestions for improving this project?"}
         ],
         "temperature": 0.7
