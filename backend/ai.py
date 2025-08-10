@@ -1,16 +1,17 @@
 import os
 import httpx
+import uuid
 from dotenv import load_dotenv
 from utils import extract_text_from_file_url
 
 load_dotenv()
 
-# Groq settings (only for summary if needed)
+# Groq settings (only for summary + suggestion)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_HEADERS = {
     "Authorization": f"Bearer {GROQ_API_KEY}",
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
 }
 
 # Hugging Face settings (for score, suggestions, learning path)
@@ -18,10 +19,10 @@ HF_API_KEY = os.getenv("HF_API_KEY")
 HF_MODEL_URL = os.getenv("HF_MODEL_URL")
 HF_HEADERS = {
     "Authorization": f"Bearer {HF_API_KEY}",
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
 }
 
-# === Hugging Face: Score ===
+
 async def generate_ai_score(description: str = "", file_url: str | None = None) -> float:
     file_content = await extract_text_from_file_url(file_url) if file_url else ""
     input_text = (
@@ -50,7 +51,7 @@ async def generate_ai_score(description: str = "", file_url: str | None = None) 
 
     return round(score, 2)
 
-# === Hugging Face: Suggestions ===
+
 async def generate_suggestions(description: str, file_url: str | None = None) -> str:
     file_content = await extract_text_from_file_url(file_url) if file_url else ""
     input_text = (
@@ -72,7 +73,7 @@ async def generate_suggestions(description: str, file_url: str | None = None) ->
         else:
             return str(data)
 
-# === Hugging Face: Learning Path ===
+
 async def generate_learning_path_hf(title: str, description: str = "", file_url: str | None = None) -> str:
     file_content = await extract_text_from_file_url(file_url) if file_url else ""
     input_text = (
@@ -94,10 +95,30 @@ async def generate_learning_path_hf(title: str, description: str = "", file_url:
         else:
             return str(data)
 
-# === Groq: Summary (unchanged) ===
+
+async def suggest_learning_path(title: str) -> str:
+    prompt = f"Suggest a detailed step-by-step learning path for the project titled: {title}"
+
+    payload = {
+        "model": "llama3-8b-8192",
+        "messages": [
+            {"role": "system", "content": "You are a helpful AI tutor."},
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": 0.7,
+    }
+    async with httpx.AsyncClient() as client:
+        res = await client.post(GROQ_API_URL, headers=GROQ_HEADERS, json=payload)
+        res.raise_for_status()
+        return res.json()["choices"][0]["message"]["content"].strip()
+
+
 async def summarize_overall_insights(projects: list) -> str:
     content = "\n\n".join(
-        [f"Title: {p['title']}\nDescription: {p['description']}\nSuggestions: {p.get('ai_suggestions', '')}" for p in projects]
+        [
+            f"Title: {p['title']}\nDescription: {p['description']}\nSuggestions: {p.get('ai_suggestions', '')}"
+            for p in projects
+        ]
     )
     prompt = f"""
     You are an AI tutor evaluating a student's project portfolio. Below are several projects they submitted:
@@ -110,9 +131,9 @@ async def summarize_overall_insights(projects: list) -> str:
         "model": "llama3-8b-8192",
         "messages": [
             {"role": "system", "content": "You are a helpful AI tutor that summarizes student performance."},
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": prompt},
         ],
-        "temperature": 0.7
+        "temperature": 0.7,
     }
     async with httpx.AsyncClient() as client:
         res = await client.post(GROQ_API_URL, headers=GROQ_HEADERS, json=payload)
