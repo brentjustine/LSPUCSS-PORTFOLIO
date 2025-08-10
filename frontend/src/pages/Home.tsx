@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { Link, useNavigate } from "react-router-dom";
 import ProjectCard from "./Projects";
@@ -6,10 +6,16 @@ import {
   PieChart, Pie, Cell, Tooltip, Legend,
   BarChart, Bar, XAxis, YAxis, ResponsiveContainer,
 } from "recharts";
-import {
-  AiOutlineAppstore, AiOutlineRobot, AiOutlinePlus,
-} from "react-icons/ai";
+import { AiOutlineAppstore, AiOutlineRobot, AiOutlinePlus } from "react-icons/ai";
 import toast from "react-hot-toast";
+
+type Project = {
+  id: number;
+  title: string;
+  description: string;
+  ai_score?: number;
+  file_paths?: string[];
+};
 
 const TABS = [
   { name: "Projects", icon: <AiOutlineAppstore className="text-xl" /> },
@@ -21,11 +27,21 @@ const COLORS = ["#3b82f6", "#e5e7eb"];
 const toastConfirm = (message: string) =>
   new Promise<boolean>((resolve) => {
     const id = toast.custom((t) => (
-      <div className="bg-white shadow-lg rounded p-4 flex flex-col items-start gap-3 w-72">
+      <div className="bg-white shadow-lg rounded p-4 flex flex-col gap-3 w-72">
         <span className="text-sm text-gray-800">{message}</span>
         <div className="flex gap-2 self-end">
-          <button onClick={() => { toast.dismiss(id); resolve(true); }} className="px-3 py-1 text-sm text-white bg-red-600 rounded">Yes</button>
-          <button onClick={() => { toast.dismiss(id); resolve(false); }} className="px-3 py-1 text-sm text-gray-600 border rounded">Cancel</button>
+          <button
+            onClick={() => { toast.dismiss(id); resolve(true); }}
+            className="px-3 py-1 text-sm text-white bg-red-600 rounded"
+          >
+            Yes
+          </button>
+          <button
+            onClick={() => { toast.dismiss(id); resolve(false); }}
+            className="px-3 py-1 text-sm text-gray-600 border rounded"
+          >
+            Cancel
+          </button>
         </div>
       </div>
     ));
@@ -33,7 +49,7 @@ const toastConfirm = (message: string) =>
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("Projects");
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -45,7 +61,23 @@ export default function Home() {
     return data?.user;
   };
 
-  const fetchProjects = async () => {
+  const fetchAISummary = useCallback(async (userId: string, refresh = false) => {
+    try {
+      setAiLoading(true);
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/summary?user_id=${userId}${refresh ? "&refresh=true" : ""}`
+      );
+      const json = await res.json();
+      setAiSummary(json.summary || "No summary available.");
+    } catch (err) {
+      console.error("Error fetching summary:", err);
+      setAiSummary("Failed to fetch summary.");
+    } finally {
+      setAiLoading(false);
+    }
+  }, []);
+
+  const fetchProjects = useCallback(async () => {
     const user = await getUser();
     if (!user) {
       setLoading(false);
@@ -55,7 +87,7 @@ export default function Home() {
     try {
       const { data, error } = await supabase
         .from("projects")
-        .select("*") // or list specific fields like "id, title, description, ai_score"
+        .select("*")
         .eq("user_id", user.id);
 
       if (error) throw error;
@@ -68,33 +100,10 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
-
-
-
-
-  const fetchAISummary = async (userId: string, refresh = false) => {
-    try {
-      setAiLoading(true);
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/summary?user_id=${userId}${refresh ? "&refresh=true" : ""}`);
-      const json = await res.json();
-      setAiSummary(json.summary || "No summary available.");
-    } catch (err) {
-      console.error("Error fetching summary:", err);
-      setAiSummary("Failed to fetch summary.");
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
-
+  }, [fetchAISummary]);
 
   useEffect(() => {
-    const init = async () => {
-      await fetchProjects();
-    };
-
-    init();
+    fetchProjects();
 
     const subscription = supabase
       .channel("public:projects")
@@ -102,7 +111,7 @@ export default function Home() {
       .subscribe();
 
     return () => supabase.removeChannel(subscription);
-  }, []);
+  }, [fetchProjects]);
 
   const toggleSelectProject = (id: number) => {
     setSelectedProjects((prev) => {
@@ -127,7 +136,7 @@ export default function Home() {
 
     const paths = (filesToDelete || []).flatMap((p) => {
       try {
-        return p.file_paths.map((f: string) => JSON.parse(f).path);
+        return p.file_paths?.map((f: string) => JSON.parse(f).path) || [];
       } catch {
         return [];
       }
@@ -150,52 +159,51 @@ export default function Home() {
     toast.success("Deleted successfully.");
     setSelectedProjects(new Set());
 
-    // ✅ Refresh project list and regenerate summary
     const user = await getUser();
     if (user) {
-      await fetchProjects(); // reloads projects
-      await fetchAISummary(user.id, true); // force refresh summary
+      await fetchProjects();
+      await fetchAISummary(user.id, true);
     }
 
     setLoading(false);
   };
 
-
-  const averageScore = projects.length > 0
+  const averageScore = projects.length
     ? projects.reduce((acc, p) => acc + (p.ai_score ?? 0), 0) / projects.length
     : 0;
-
 
   const pieData = [
     { name: "Score", value: averageScore },
     { name: "Remaining", value: 10 - averageScore },
   ];
 
-  const barData = projects.map(p => ({
+  const barData = projects.map((p) => ({
     name: p.title,
     score: p.ai_score ?? 0,
   }));
 
   return (
     <div className="flex h-screen">
+      {/* Sidebar */}
       <aside className="hidden md:block w-64 bg-white shadow h-full">
         <div className="p-6 font-bold text-xl text-gray-800">LSPU Online</div>
         <nav className="space-y-4 p-4 text-gray-700">
-          {TABS.map((tab) => (
+          {TABS.map(({ name, icon }) => (
             <button
-              key={tab.name}
-              onClick={() => setActiveTab(tab.name)}
+              key={name}
+              onClick={() => setActiveTab(name)}
               className={`flex items-center space-x-2 w-full text-left px-3 py-2 rounded transition ${
-                activeTab === tab.name ? "bg-blue-100 text-blue-600" : "hover:bg-gray-100"
+                activeTab === name ? "bg-blue-100 text-blue-600" : "hover:bg-gray-100"
               }`}
             >
-              {tab.icon}
-              <span>{tab.name}</span>
+              {icon}
+              <span>{name}</span>
             </button>
           ))}
         </nav>
       </aside>
 
+      {/* Main */}
       <main className="flex-1 bg-gray-50 p-4 md:p-6 overflow-y-auto">
         <header className="flex justify-between items-center mb-6">
           <h1 className="text-xl md:text-2xl font-bold">My Projects Dashboard</h1>
@@ -207,50 +215,56 @@ export default function Home() {
           </button>
         </header>
 
+        {/* Mobile Tabs */}
         <div className="flex gap-2 border-b pb-2 mb-4 overflow-x-auto md:hidden">
-          {TABS.map((tab) => (
+          {TABS.map(({ name, icon }) => (
             <button
-              key={tab.name}
-              onClick={() => setActiveTab(tab.name)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-t font-semibold transition-all text-sm ${
-                activeTab === tab.name ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-800"
+              key={name}
+              onClick={() => setActiveTab(name)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-t font-semibold text-sm ${
+                activeTab === name ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-800"
               }`}
             >
-              <span>{tab.icon}</span>
-              <span>{tab.name}</span>
+              {icon}
+              <span>{name}</span>
             </button>
           ))}
         </div>
 
         {loading && (
-          <div className="text-center py-10 text-gray-500 animate-pulse">⏳ Loading projects...</div>
+          <div className="text-center py-10 text-gray-500 animate-pulse">
+            ⏳ Loading projects...
+          </div>
         )}
 
+        {/* Projects Tab */}
         {!loading && activeTab === "Projects" && (
           <div>
             {selectedProjects.size > 0 && (
               <button
                 onClick={handleDelete}
-                className="mb-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                className="mb-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
               >
                 Delete Selected ({selectedProjects.size})
               </button>
             )}
-            <div className="space-y-4">
-              {projects.length === 0 ? (
-                <div className="text-center py-20 text-gray-500 space-y-4">
-                  <div className="text-6xl">📁</div>
-                  <p className="text-lg font-medium">No projects yet</p>
-                  <p className="text-sm text-gray-400">Click the plus button to add one!</p>
-                </div>
-              ) : (
-                projects.map((project) => (
+
+            {projects.length === 0 ? (
+              <div className="text-center py-20 text-gray-500 space-y-4">
+                <div className="text-6xl">📁</div>
+                <p className="text-lg font-medium">No projects yet</p>
+                <p className="text-sm text-gray-400">
+                  Click the plus button to add one!
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {projects.map((project) => (
                   <div key={project.id} className="flex items-start gap-2">
                     <input
                       type="checkbox"
                       checked={selectedProjects.has(project.id)}
                       onChange={() => toggleSelectProject(project.id)}
-                      onClick={(e) => e.stopPropagation()}
                       className="mt-3 w-5 h-5 accent-blue-600"
                     />
                     <Link to={`/project/${project.id}`} className="flex-1 block no-underline">
@@ -261,17 +275,21 @@ export default function Home() {
                       />
                     </Link>
                   </div>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
+        {/* AI Overview Tab */}
         {!loading && activeTab === "AI Overview" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Pie Chart */}
               <div className="bg-white rounded shadow p-4 flex flex-col items-center">
-                <h3 className="text-base md:text-lg font-bold mb-4 text-center">Overall AI Score</h3>
+                <h3 className="text-base md:text-lg font-bold mb-4 text-center">
+                  Overall AI Score
+                </h3>
                 <PieChart width={250} height={250}>
                   <Pie
                     data={pieData}
@@ -282,8 +300,8 @@ export default function Home() {
                     innerRadius={60}
                     outerRadius={100}
                   >
-                    {pieData.map((entry, i) => (
-                      <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
+                    {pieData.map((_, i) => (
+                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip />
@@ -291,6 +309,7 @@ export default function Home() {
                 </PieChart>
               </div>
 
+              {/* Bar Chart */}
               <div className="bg-white p-4 md:p-6 rounded shadow flex justify-center items-center min-h-[300px]">
                 {projects.length === 0 ? (
                   <p className="text-gray-500 text-center">No performance data available yet.</p>
@@ -307,10 +326,11 @@ export default function Home() {
               </div>
             </div>
 
+            {/* AI Summary */}
             <div className="bg-white rounded shadow p-4">
               <h3 className="text-base md:text-lg font-bold mb-2">AI Learning Path</h3>
               <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                {aiSummary ?? "Loading AI summary..."}
+                {aiLoading ? "Loading AI summary..." : aiSummary}
               </p>
             </div>
           </div>

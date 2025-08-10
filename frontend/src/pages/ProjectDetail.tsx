@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { PieChart, Pie, Cell } from "recharts";
+import ReactMarkdown from "react-markdown";
 
 interface Project {
   id: number;
@@ -101,28 +102,18 @@ export default function ProjectDetail() {
           </p>
         </div>
 
+        import ReactMarkdown from "react-markdown";
+
         {/* AI Suggestions */}
         <div>
           <h2 className="text-lg font-semibold text-green-700 mb-3">🌟 AI Suggestions</h2>
-          {suggestions.length > 0 ? (
-            <div className="space-y-4">
-              {suggestions.map((s, index) => {
-                const [titleMatch, ...rest] = s.split(":");
-                const title = titleMatch?.trim() || `Suggestion ${index + 1}`;
-                const content = rest.join(":").trim();
-
-                return (
-                  <div
-                    key={index}
-                    className="bg-gray-50 border-l-4 border-green-500 p-4 rounded shadow-sm"
-                  >
-                    <h3 className="text-md font-semibold text-gray-800 mb-1">✅ {title}</h3>
-                    <p className="text-gray-700 text-sm whitespace-pre-line leading-relaxed">
-                      {content}
-                    </p>
-                  </div>
-                );
-              })}
+          {project.ai_suggestions ? (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-5 shadow-sm prose prose-sm max-w-none">
+              <ReactMarkdown>
+                {typeof project.ai_suggestions === "string"
+                  ? project.ai_suggestions
+                  : project.ai_suggestions.join("\n")}
+              </ReactMarkdown>
             </div>
           ) : (
             <p className="text-gray-500 text-sm">No AI suggestions available.</p>
