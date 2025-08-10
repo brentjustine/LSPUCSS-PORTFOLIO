@@ -102,8 +102,6 @@ export default function ProjectDetail() {
           </p>
         </div>
 
-        import ReactMarkdown from "react-markdown";
-
         {/* AI Suggestions */}
         <div>
           <h2 className="text-lg font-semibold text-green-700 mb-3">🌟 AI Suggestions</h2>
