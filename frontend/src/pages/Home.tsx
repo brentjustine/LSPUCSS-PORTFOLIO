@@ -120,8 +120,12 @@ export default function Home() {
     setLoading(true);
     const ids = Array.from(selectedProjects);
 
-    const { data: filesToDelete } = await supabase.from("projects").select("file_paths").in("id", ids);
-    const paths = (filesToDelete || []).flatMap(p => {
+    const { data: filesToDelete } = await supabase
+      .from("projects")
+      .select("file_paths")
+      .in("id", ids);
+
+    const paths = (filesToDelete || []).flatMap((p) => {
       try {
         return p.file_paths.map((f: string) => JSON.parse(f).path);
       } catch {
@@ -131,22 +135,31 @@ export default function Home() {
 
     if (paths.length > 0) {
       const { error } = await supabase.storage.from("projects").remove(paths);
-      if (error) return toast.error("Storage delete failed: " + error.message);
+      if (error) {
+        setLoading(false);
+        return toast.error("Storage delete failed: " + error.message);
+      }
     }
 
     const { error: deleteError } = await supabase.from("projects").delete().in("id", ids);
     if (deleteError) {
-      toast.error("Delete failed: " + deleteError.message);
       setLoading(false);
-      return;
+      return toast.error("Delete failed: " + deleteError.message);
     }
 
     toast.success("Deleted successfully.");
     setSelectedProjects(new Set());
 
-    await fetchProjects(); // Triggers re-generation or removal of summary
+    // ✅ Refresh project list and regenerate summary
+    const user = await getUser();
+    if (user) {
+      await fetchProjects(); // reloads projects
+      await fetchAISummary(user.id, true); // force refresh summary
+    }
+
     setLoading(false);
   };
+
 
   const averageScore = projects.length > 0
     ? projects.reduce((acc, p) => acc + (p.ai_score ?? 0), 0) / projects.length
