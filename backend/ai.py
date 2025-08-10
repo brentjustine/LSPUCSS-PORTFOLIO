@@ -12,7 +12,8 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-MISTRAL_MODEL = "mistral-7b-instruct"
+MISTRAL_MODEL = "Mixtral-8x7B-32k"
+
 
 async def generate_ai_score() -> float:
     return 9.0
