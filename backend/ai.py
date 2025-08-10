@@ -19,7 +19,7 @@ async def generate_ai_score(description: str, file_url: str | None = None) -> fl
         "messages": [
             {
                 "role": "system",
-                "content": "You are a strict project evaluator. Rate the project from 1.0 to 10.0 based on quality, clarity, and completeness. Output only the numeric score, no words."
+                "content": "Given the project title and description, evaluate the quality, and provide a score. Output only the numeric score, no words."
             },
             {
                 "role": "user",
