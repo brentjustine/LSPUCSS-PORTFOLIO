@@ -12,13 +12,15 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
+MISTRAL_MODEL = "mistral-7b-instruct"
+
 async def generate_ai_score() -> float:
     return 9.0
 
 async def generate_suggestions(description: str, file_url: str | None = None) -> str:
     file_content = await extract_text_from_file_url(file_url) if file_url else ""
     payload = {
-        "model": "llama3-8b-8192",
+        "model": MISTRAL_MODEL,
         "messages": [
             {"role": "system", "content": "Given the project title and description, evaluate the quality, give recommendations and provide a score and feedback."},
             {"role": "user", "content": f"Project description: {description}\n\nFile contents: {file_content}\n\nWhat are some suggestions for improving this project?"}
@@ -33,7 +35,7 @@ async def generate_suggestions(description: str, file_url: str | None = None) ->
 async def suggest_learning_path(title: str, description: str = "", file_url: str | None = None) -> str:
     file_content = await extract_text_from_file_url(file_url) if file_url else ""
     payload = {
-        "model": "llama3-8b-8192",
+        "model": MISTRAL_MODEL,
         "messages": [
             {"role": "system", "content": "You are a learning path recommendation assistant for programming students."},
             {"role": "user", "content": f"Title: {title}\nDescription: {description}\n\nFile content: {file_content}\n\nWhat should I learn next?"}
@@ -56,7 +58,7 @@ async def summarize_overall_insights(projects: list) -> str:
     """
 
     payload = {
-        "model": "llama3-8b-8192",
+        "model": MISTRAL_MODEL,
         "messages": [
             {"role": "system", "content": "You are a helpful AI tutor that summarizes student performance."},
             {"role": "user", "content": prompt}
