@@ -8,6 +8,7 @@ import {
 } from "recharts";
 import { AiOutlineAppstore, AiOutlineRobot, AiOutlinePlus } from "react-icons/ai";
 import toast from "react-hot-toast";
+import ReactMarkdown from "react-markdown";
 
 type Project = {
   id: number;
@@ -83,7 +84,6 @@ export default function Home() {
       setLoading(false);
       return;
     }
-
     try {
       const { data, error } = await supabase
         .from("projects")
@@ -329,9 +329,13 @@ export default function Home() {
             {/* AI Summary */}
             <div className="bg-white rounded shadow p-4">
               <h3 className="text-base md:text-lg font-bold mb-2">AI Learning Path</h3>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                {aiLoading ? "Loading AI summary..." : aiSummary}
-              </p>
+              {aiLoading ? (
+                <p className="text-sm text-gray-700">Loading AI summary...</p>
+              ) : (
+                <ReactMarkdown className="text-sm text-gray-700 whitespace-pre-wrap">
+                  {aiSummary || ""}
+                </ReactMarkdown>
+              )}
             </div>
           </div>
         )}
