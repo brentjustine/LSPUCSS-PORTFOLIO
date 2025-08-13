@@ -37,7 +37,7 @@ export default function ProjectDetail() {
         .single();
 
       if (error) console.error("Failed to fetch project:", error);
-      if (data) setProject(data);
+      setProject(data ?? null);
       setLoading(false);
     })();
   }, [id]);
@@ -62,18 +62,19 @@ export default function ProjectDetail() {
   ];
 
   // AI Suggestions (safe handling)
-  const rawSuggestions = typeof project.ai_suggestions === "string" ? project.ai_suggestions : "";
-  const suggestions = rawSuggestions
-    .split(/\d+\.\s+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const rawSuggestions = project.ai_suggestions ?? "";
+  const suggestions =
+    rawSuggestions && typeof rawSuggestions === "string"
+      ? rawSuggestions.split(/\d+\.\s+/).map((s) => s.trim()).filter(Boolean)
+      : [];
 
-  // Description
-  const descriptionTooLong = project.description.length > 150;
+  // Description (safe handling)
+  const descriptionText = project.description ?? "";
+  const descriptionTooLong = descriptionText.length > 150;
   const displayedDescription =
     descriptionTooLong && !showFullDescription
-      ? `${project.description.slice(0, 150)}...`
-      : project.description;
+      ? `${descriptionText.slice(0, 150)}...`
+      : descriptionText;
 
   // Images
   const images =
