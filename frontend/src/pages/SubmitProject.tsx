@@ -34,16 +34,15 @@ export default function SubmitProject() {
         if (userError || !userData?.user) throw new Error("User not authenticated.");
         const user = userData.user;
 
-        // 🔹 Use display_name if available, else email
-        const studentName = user.user_metadata?.display_name?.trim() || user.email;
-
-        // 🔹 Fetch course from profile
+        // 🔹 Fetch full_name and course from profiles table
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("course")
+          .select("full_name, course")
           .eq("id", user.id)
           .single();
-        if (profileError) throw new Error("Failed to fetch course.");
+        if (profileError) throw new Error("Failed to fetch profile.");
+
+        const studentName = profile?.full_name?.trim() || user.email;
         const course = profile?.course || "N/A";
 
         // 🔹 Upload files
