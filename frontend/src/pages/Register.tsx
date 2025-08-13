@@ -4,14 +4,19 @@ import { supabase } from "../lib/supabaseClient";
 import toast from "react-hot-toast";
 
 export default function Register() {
-  const [form, setForm] = useState({ full_name: "", email: "", password: "" });
+  const [form, setForm] = useState({
+    full_name: "",
+    email: "",
+    password: "",
+    course: "", // added course field
+  });
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -52,7 +57,8 @@ export default function Register() {
         options: {
           data: {
             full_name: form.full_name,
-            profile_picture_url: profilePicUrl || null, // match your `profiles` table
+            profile_picture_url: profilePicUrl || null,
+            course: form.course, // store in auth metadata too (optional)
           },
         },
       });
@@ -68,6 +74,7 @@ export default function Register() {
         full_name: form.full_name,
         profile_picture_url: profilePicUrl || null,
         is_public: true,
+        course: form.course, // store in profiles table
       });
 
       if (dbError) throw new Error(`Database error: ${dbError.message}`);
@@ -125,6 +132,19 @@ export default function Register() {
               {showPassword ? "🙈" : "👁️"}
             </button>
           </div>
+
+          {/* Course dropdown */}
+          <select
+            name="course"
+            value={form.course}
+            onChange={handleChange}
+            required
+            className="w-full p-3 border border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-white bg-black"
+          >
+            <option value="">Select Course</option>
+            <option value="CS">CS</option>
+            <option value="IT">IT</option>
+          </select>
 
           <div className="text-sm font-semibold text-gray-300">Optional Profile Picture</div>
           <label className="cursor-pointer border-dashed border-2 border-gray-600 rounded-xl flex flex-col items-center justify-center p-4 hover:border-blue-400 transition">
