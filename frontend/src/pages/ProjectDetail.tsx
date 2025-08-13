@@ -42,8 +42,10 @@ export default function ProjectDetail() {
     })();
   }, [id]);
 
-  if (loading) return <div className="text-center mt-20 text-gray-600">Loading project...</div>;
-  if (!project) return <div className="text-center mt-20 text-red-500">Project not found.</div>;
+  if (loading)
+    return <div className="text-center mt-20 text-gray-600">Loading project...</div>;
+  if (!project)
+    return <div className="text-center mt-20 text-red-500">Project not found.</div>;
 
   // AI Score
   const safeScore = project.ai_score ?? 0;
@@ -60,22 +62,22 @@ export default function ProjectDetail() {
   ];
 
   // AI Suggestions (safe handling)
-  const rawSuggestions = project.ai_suggestions ?? "";
+  const rawSuggestions = typeof project.ai_suggestions === "string" ? project.ai_suggestions : "";
   const suggestions = rawSuggestions
     .split(/\d+\.\s+/)
-    .map(s => s.trim())
+    .map((s) => s.trim())
     .filter(Boolean);
 
-  // Description handling
+  // Description
   const descriptionTooLong = project.description.length > 150;
   const displayedDescription =
     descriptionTooLong && !showFullDescription
       ? `${project.description.slice(0, 150)}...`
       : project.description;
 
-  // Image filtering
+  // Images
   const images =
-    project.file_paths?.filter(file => {
+    project.file_paths?.filter((file) => {
       const ext = file.path.split(".").pop()?.toLowerCase();
       return ext && IMAGE_EXTENSIONS.includes(ext);
     }) || [];
@@ -162,7 +164,7 @@ export default function ProjectDetail() {
             {displayedDescription}
             {descriptionTooLong && (
               <span
-                onClick={() => setShowFullDescription(prev => !prev)}
+                onClick={() => setShowFullDescription((prev) => !prev)}
                 className="text-blue-600 ml-2 cursor-pointer underline"
               >
                 {showFullDescription ? "Show less" : "Read more"}
