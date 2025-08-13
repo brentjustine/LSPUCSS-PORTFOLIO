@@ -14,8 +14,8 @@ interface Project {
   title: string;
   description: string;
   ai_score: number | null;
-  grade: number | null; // New: Grade field
-  ai_suggestions: string | string[] | null;
+  grade: number | null;
+  ai_suggestions: string | null;
   file_paths?: { path: string; url: string }[];
 }
 
@@ -36,39 +36,35 @@ export default function ProjectDetail() {
         .eq("id", id)
         .single();
 
-      if (!error && data) setProject(data);
+      if (error) console.error("Failed to fetch project:", error);
+      if (data) setProject(data);
       setLoading(false);
     })();
   }, [id]);
 
-  if (loading) {
-    return <div className="text-center mt-20 text-gray-600">Loading project...</div>;
-  }
+  if (loading) return <div className="text-center mt-20 text-gray-600">Loading project...</div>;
+  if (!project) return <div className="text-center mt-20 text-red-500">Project not found.</div>;
 
-  if (!project) {
-    return <div className="text-center mt-20 text-red-500">Project not found.</div>;
-  }
-
-  // AI Score Data
+  // AI Score
   const safeScore = project.ai_score ?? 0;
   const aiScoreData = [
     { name: "Score", value: safeScore },
     { name: "Remaining", value: Math.max(0, 10 - safeScore) },
   ];
 
-  // Grade Data (Philippine high school, 0–100)
+  // Grade
   const safeGrade = project.grade ?? 0;
   const gradeData = [
     { name: "Grade", value: safeGrade },
     { name: "Remaining", value: Math.max(0, 100 - safeGrade) },
   ];
 
-  // AI Suggestions formatting
-  const suggestions = Array.isArray(project.ai_suggestions)
-    ? project.ai_suggestions
-    : typeof project.ai_suggestions === "string"
-    ? project.ai_suggestions.split(/\d+\.\s+/).filter(Boolean)
-    : [];
+  // AI Suggestions (safe handling)
+  const rawSuggestions = project.ai_suggestions ?? "";
+  const suggestions = rawSuggestions
+    .split(/\d+\.\s+/)
+    .map(s => s.trim())
+    .filter(Boolean);
 
   // Description handling
   const descriptionTooLong = project.description.length > 150;
@@ -77,9 +73,9 @@ export default function ProjectDetail() {
       ? `${project.description.slice(0, 150)}...`
       : project.description;
 
-  // Filter images only
+  // Image filtering
   const images =
-    project.file_paths?.filter((file) => {
+    project.file_paths?.filter(file => {
       const ext = file.path.split(".").pop()?.toLowerCase();
       return ext && IMAGE_EXTENSIONS.includes(ext);
     }) || [];
@@ -166,7 +162,7 @@ export default function ProjectDetail() {
             {displayedDescription}
             {descriptionTooLong && (
               <span
-                onClick={() => setShowFullDescription((prev) => !prev)}
+                onClick={() => setShowFullDescription(prev => !prev)}
                 className="text-blue-600 ml-2 cursor-pointer underline"
               >
                 {showFullDescription ? "Show less" : "Read more"}
@@ -180,11 +176,7 @@ export default function ProjectDetail() {
           <h2 className="text-lg font-semibold text-green-700 mb-3">🌟 AI Suggestions</h2>
           {suggestions.length > 0 ? (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-5 shadow-sm prose prose-sm max-w-none">
-              <ReactMarkdown>
-                {Array.isArray(project.ai_suggestions)
-                  ? project.ai_suggestions.join("\n")
-                  : project.ai_suggestions ?? ""}
-              </ReactMarkdown>
+              <ReactMarkdown>{rawSuggestions}</ReactMarkdown>
             </div>
           ) : (
             <p className="text-gray-500 text-sm">No AI suggestions available.</p>
