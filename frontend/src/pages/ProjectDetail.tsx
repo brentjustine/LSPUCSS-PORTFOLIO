@@ -15,10 +15,11 @@ interface Project {
   description: string;
   ai_score: number | null;
   ai_suggestions: string | string[] | null;
-  images?: string[]; // <-- Add images array
+  file_paths?: { path: string; url: string }[];
 }
 
 const COLORS = ["#10B981", "#E5E7EB"];
+const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
 
 export default function ProjectDetail() {
   const { id } = useParams();
@@ -30,11 +31,13 @@ export default function ProjectDetail() {
     const fetchProject = async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id, title, description, ai_score, ai_suggestions, images") // Fetch images
+        .select("id, title, description, ai_score, ai_suggestions, file_paths")
         .eq("id", id)
         .single();
 
-      if (!error && data) setProject(data);
+      if (!error && data) {
+        setProject(data);
+      }
       setLoading(false);
     };
 
@@ -62,6 +65,13 @@ export default function ProjectDetail() {
       ? project.description.slice(0, 150) + "..."
       : project.description;
 
+  // Extract images from file_paths
+  const images =
+    project.file_paths?.filter((file) => {
+      const ext = file.path.split(".").pop()?.toLowerCase();
+      return ext && IMAGE_EXTENSIONS.includes(ext);
+    }) || [];
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4">
       <div className="bg-white p-8 rounded-xl shadow-lg max-w-3xl w-full space-y-8">
@@ -70,7 +80,7 @@ export default function ProjectDetail() {
         <h1 className="text-3xl font-bold text-center text-gray-800">{project.title}</h1>
 
         {/* Sliding Image Gallery */}
-        {project.images && project.images.length > 0 && (
+        {images.length > 0 && (
           <Swiper
             modules={[Navigation, Pagination]}
             navigation
@@ -78,10 +88,10 @@ export default function ProjectDetail() {
             loop
             className="rounded-xl overflow-hidden shadow-md"
           >
-            {project.images.map((imgUrl, idx) => (
+            {images.map((file, idx) => (
               <SwiperSlide key={idx}>
                 <img
-                  src={imgUrl}
+                  src={file.url}
                   alt={`Project image ${idx + 1}`}
                   className="w-full h-64 object-cover"
                 />
@@ -103,8 +113,8 @@ export default function ProjectDetail() {
                 startAngle={90}
                 endAngle={-270}
               >
-                {aiScoreData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index]} />
+                {aiScoreData.map((_, index) => (
+                  <Cell key={index} fill={COLORS[index]} />
                 ))}
               </Pie>
             </PieChart>
