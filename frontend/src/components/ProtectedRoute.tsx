@@ -10,24 +10,33 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ children, session }: ProtectedRouteProps) {
   const location = useLocation();
 
-  const authPages = ["/login", "/register"];
-  const resetPasswordPage = "/reset-password";
+  // Pages that should only be accessible when logged OUT
+  const guestOnlyPages = ["/login", "/register"];
 
-  // If logged in and trying to access login/register → redirect
-  if (session && authPages.includes(location.pathname)) {
-    return <Navigate to="/dashboard" replace />;
+  // Pages that require a token in the URL
+  const tokenProtectedPages = ["/update-password"];
+
+  // 1️⃣ Redirect logged-in users away from guest-only pages
+  if (session && guestOnlyPages.includes(location.pathname)) {
+    return <Navigate to="/" replace />;
   }
 
-  // If NOT logged in and trying to access protected pages → redirect to login
-  if (!session && !authPages.includes(location.pathname) && location.pathname !== resetPasswordPage) {
+  // 2️⃣ Redirect logged-in users away from token-protected pages
+  if (session && tokenProtectedPages.includes(location.pathname)) {
+    return <Navigate to="/" replace />;
+  }
+
+  // 3️⃣ Redirect logged-out users trying to access normal protected pages
+  if (
+    !session &&
+    !guestOnlyPages.includes(location.pathname) &&
+    !tokenProtectedPages.includes(location.pathname)
+  ) {
     return <Navigate to="/login" replace />;
   }
 
-  // If on reset-password but no token from email → redirect to login
-  if (
-    location.pathname === resetPasswordPage &&
-    !location.search.includes("access_token")
-  ) {
+  // 4️⃣ Check token for token-protected pages
+  if (tokenProtectedPages.includes(location.pathname) && !location.search.includes("access_token")) {
     return <Navigate to="/login" replace />;
   }
 
