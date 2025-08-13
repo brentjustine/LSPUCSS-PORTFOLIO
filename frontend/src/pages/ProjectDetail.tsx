@@ -14,7 +14,7 @@ interface Project {
   title: string;
   description: string;
   ai_score: number | null;
-  grade: number | null;
+  grade: string | null;
   ai_suggestions: string | null;
   file_url?: { url: string }[];
 }
