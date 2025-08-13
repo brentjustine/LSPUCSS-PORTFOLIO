@@ -16,7 +16,7 @@ interface Project {
   ai_score: number | null;
   grade: number | null;
   ai_suggestions: string | null;
-  file_paths?: { path: string; url: string }[];
+  file_url?: { url: string }[];
 }
 
 const COLORS = ["#10B981", "#E5E7EB"];
@@ -32,7 +32,7 @@ export default function ProjectDetail() {
     (async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id, title, description, ai_score, grade, ai_suggestions, file_paths")
+        .select("id, title, description, ai_score, grade, ai_suggestions, file_url")
         .eq("id", id)
         .single();
 
@@ -78,8 +78,9 @@ export default function ProjectDetail() {
 
   // Images
   const images =
-    project.file_paths?.filter((file) => {
-      const ext = file.path.split(".").pop()?.toLowerCase();
+    project.file_url?.filter((file) => {
+      if (!file?.url) return false;
+      const ext = file.url.split(".").pop()?.toLowerCase();
       return ext && IMAGE_EXTENSIONS.includes(ext);
     }) || [];
 
