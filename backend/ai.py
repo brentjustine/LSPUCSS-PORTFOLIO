@@ -26,7 +26,7 @@ async def generate_ai_score(description: str, file_url: str | None = None) -> fl
                 "content": f"Project description: {description}\n\nFile contents: {file_content}\n\nWhat is the score?"
             }
         ],
-        "temperature": 0.0  # Keep deterministic for scoring
+        "temperature": 0.7 
     }
     async with httpx.AsyncClient() as client:
         res = await client.post(GROQ_API_URL, headers=HEADERS, json=payload)
