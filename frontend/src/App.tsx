@@ -17,7 +17,6 @@ import Users from "./pages/Users";
 import UserDetail from "./pages/UserDetail";
 import { Toaster } from "react-hot-toast";
 
-// 👇 Wrap routes in AnimatePresence for page transitions
 function AppRoutes({ session }: { session: Session | null }) {
   const location = useLocation();
 
@@ -26,8 +25,25 @@ function AppRoutes({ session }: { session: Session | null }) {
       <Navbar session={session} />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          {/* Public Routes */}
+          <Route
+            path="/login"
+            element={
+              <ProtectedRoute session={session}>
+                <Login />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <ProtectedRoute session={session}>
+                <Register />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Protected Routes */}
           <Route
             path="/"
             element={
@@ -60,7 +76,14 @@ function AppRoutes({ session }: { session: Session | null }) {
               </ProtectedRoute>
             }
           />
-          <Route path="/update-password" element={<UpdatePassword />} />
+          <Route
+            path="/update-password"
+            element={
+              <ProtectedRoute session={session}>
+                <UpdatePassword />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/users"
             element={
