@@ -4,7 +4,11 @@ import { supabase } from "../lib/supabaseClient";
 import toast from "react-hot-toast";
 
 export default function SubmitProject() {
-  const [form, setForm] = useState({ title: "", description: "", grade: "" });
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    grade: "",
+  });
   const [files, setFiles] = useState<File[]>([]);
   const navigate = useNavigate();
 
@@ -25,25 +29,24 @@ export default function SubmitProject() {
 
     await toast.promise(
       (async () => {
-        // 🔐 Get authenticated user
+        // 🔹 Get authenticated user
         const { data: userData, error: userError } = await supabase.auth.getUser();
         if (userError || !userData?.user) throw new Error("User not authenticated.");
         const user = userData.user;
 
-        // ✅ Use Display Name if available, else fallback to email
+        // 🔹 Use display_name if available, else email
         const studentName = user.user_metadata?.display_name?.trim() || user.email;
 
-        // 📚 Get course from profiles table
-        const { data: profileData, error: profileError } = await supabase
+        // 🔹 Fetch course from profile
+        const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("course")
           .eq("id", user.id)
           .single();
-
         if (profileError) throw new Error("Failed to fetch course.");
-        const course = profileData?.course || "N/A";
+        const course = profile?.course || "N/A";
 
-        // 📤 Upload files to Supabase Storage
+        // 🔹 Upload files
         const uploadedFiles: { path: string; url: string }[] = [];
         for (const file of files) {
           const filePath = `${user.id}/${Date.now()}-${file.name}`;
@@ -57,12 +60,10 @@ export default function SubmitProject() {
             .from("projects")
             .getPublicUrl(filePath);
 
-          if (!publicUrlData?.publicUrl) throw new Error("Failed to get file URL.");
-
           uploadedFiles.push({ path: filePath, url: publicUrlData.publicUrl });
         }
 
-        // 🤖 Send to backend AI service
+        // 🔹 Send to AI backend
         const aiRes = await fetch(`${import.meta.env.VITE_BACKEND_URL}/submit`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -74,15 +75,14 @@ export default function SubmitProject() {
             file_url: uploadedFiles[0]?.url || null,
           }),
         });
-
         if (!aiRes.ok) throw new Error("AI processing failed.");
         const ai = await aiRes.json();
 
-        // 💾 Save to Supabase DB with course + grade
+        // 🔹 Save to projects table
         const { error: dbError } = await supabase.from("projects").insert({
           user_id: user.id,
           student_name: studentName,
-          course: course,
+          course,
           title: form.title,
           description: form.description,
           file_url: uploadedFiles[0]?.url || null,
@@ -90,9 +90,9 @@ export default function SubmitProject() {
           ai_score: ai.ai_score ?? null,
           ai_suggestions: ai.ai_suggestions ?? null,
           ai_learning_path: ai.ai_learning_path ?? null,
-          grade: Number(form.grade) || null, // store as numeric
+          grade:
+            form.grade.trim() !== "" ? Math.max(75, Math.min(100, Number(form.grade))) : null,
         });
-
         if (dbError) throw dbError;
 
         localStorage.setItem("ai_refresh_needed", "true");
@@ -100,8 +100,8 @@ export default function SubmitProject() {
       })(),
       {
         loading: "Submitting your project...",
-        success: "✅ Project submitted!",
-        error: (err) => `${err.message || "Submission failed"}`,
+        success: "✅ Project submitted successfully!",
+        error: (err) => err.message || "Submission failed.",
       }
     );
   };
@@ -113,6 +113,7 @@ export default function SubmitProject() {
     >
       <h1 className="text-2xl font-bold text-center">📤 Submit Your Project</h1>
 
+      {/* Title */}
       <input
         name="title"
         value={form.title}
@@ -122,6 +123,7 @@ export default function SubmitProject() {
         required
       />
 
+      {/* Description */}
       <textarea
         name="description"
         value={form.description}
@@ -131,6 +133,7 @@ export default function SubmitProject() {
         required
       />
 
+      {/* Grade - Optional */}
       <input
         name="grade"
         type="number"
@@ -142,6 +145,7 @@ export default function SubmitProject() {
         className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
       />
 
+      {/* File Upload */}
       <div className="w-full">
         <label className="block font-semibold mb-1">📁 Upload Files (optional)</label>
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition">
@@ -152,10 +156,7 @@ export default function SubmitProject() {
             onChange={handleFileChange}
             className="hidden"
           />
-          <label
-            htmlFor="fileUpload"
-            className="cursor-pointer flex flex-col items-center gap-2"
-          >
+          <label htmlFor="fileUpload" className="cursor-pointer flex flex-col items-center gap-2">
             <span className="text-3xl">📎</span>
             <span className="text-gray-600">Click or drag files here to upload</span>
             <span className="text-sm text-gray-400">(ZIP, code, docs, images, etc.)</span>
