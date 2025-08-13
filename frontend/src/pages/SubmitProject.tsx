@@ -4,7 +4,7 @@ import { supabase } from "../lib/supabaseClient";
 import toast from "react-hot-toast";
 
 export default function SubmitProject() {
-  const [form, setForm] = useState({ title: "", description: "" });
+  const [form, setForm] = useState({ title: "", description: "", grade: "" });
   const [files, setFiles] = useState<File[]>([]);
   const navigate = useNavigate();
 
@@ -25,14 +25,26 @@ export default function SubmitProject() {
 
     await toast.promise(
       (async () => {
-        // 🔐 Get user
+        // 🔐 Get authenticated user
         const { data: userData, error: userError } = await supabase.auth.getUser();
         if (userError || !userData?.user) throw new Error("User not authenticated.");
         const user = userData.user;
 
+        // ✅ Use Display Name if available, else fallback to email
+        const studentName = user.user_metadata?.display_name?.trim() || user.email;
+
+        // 📚 Get course from profiles table
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("course")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError) throw new Error("Failed to fetch course.");
+        const course = profileData?.course || "N/A";
+
         // 📤 Upload files to Supabase Storage
         const uploadedFiles: { path: string; url: string }[] = [];
-
         for (const file of files) {
           const filePath = `${user.id}/${Date.now()}-${file.name}`;
           const { error: uploadError } = await supabase.storage
@@ -55,8 +67,8 @@ export default function SubmitProject() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            user_id: user.id,                           // ✅ ADD THIS
-            student_name: user.email,
+            user_id: user.id,
+            student_name: studentName,
             title: form.title,
             description: form.description,
             file_url: uploadedFiles[0]?.url || null,
@@ -66,10 +78,11 @@ export default function SubmitProject() {
         if (!aiRes.ok) throw new Error("AI processing failed.");
         const ai = await aiRes.json();
 
-        // 💾 Save to Supabase DB
+        // 💾 Save to Supabase DB with course + grade
         const { error: dbError } = await supabase.from("projects").insert({
           user_id: user.id,
-          student_name: user.email,
+          student_name: studentName,
+          course: course,
           title: form.title,
           description: form.description,
           file_url: uploadedFiles[0]?.url || null,
@@ -77,6 +90,7 @@ export default function SubmitProject() {
           ai_score: ai.ai_score ?? null,
           ai_suggestions: ai.ai_suggestions ?? null,
           ai_learning_path: ai.ai_learning_path ?? null,
+          grade: Number(form.grade) || null, // store as numeric
         });
 
         if (dbError) throw dbError;
@@ -117,6 +131,17 @@ export default function SubmitProject() {
         required
       />
 
+      <input
+        name="grade"
+        type="number"
+        value={form.grade}
+        onChange={handleChange}
+        placeholder="Grade (75 - 100)"
+        min="75"
+        max="100"
+        className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+      />
+
       <div className="w-full">
         <label className="block font-semibold mb-1">📁 Upload Files (optional)</label>
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition">
@@ -132,12 +157,8 @@ export default function SubmitProject() {
             className="cursor-pointer flex flex-col items-center gap-2"
           >
             <span className="text-3xl">📎</span>
-            <span className="text-gray-600">
-              Click or drag files here to upload
-            </span>
-            <span className="text-sm text-gray-400">
-              (ZIP, code, docs, images, etc.)
-            </span>
+            <span className="text-gray-600">Click or drag files here to upload</span>
+            <span className="text-sm text-gray-400">(ZIP, code, docs, images, etc.)</span>
           </label>
         </div>
 

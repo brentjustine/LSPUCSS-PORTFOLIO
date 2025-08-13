@@ -4,12 +4,7 @@ import { supabase } from "../lib/supabaseClient";
 import toast from "react-hot-toast";
 
 export default function Register() {
-  const [form, setForm] = useState({
-    full_name: "",
-    email: "",
-    password: "",
-  });
-
+  const [form, setForm] = useState({ full_name: "", email: "", password: "" });
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -17,12 +12,12 @@ export default function Register() {
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const image = e.target.files[0];
+    const image = e.target.files?.[0];
+    if (image) {
       setFile(image);
       setPreviewUrl(URL.createObjectURL(image));
     }
@@ -31,9 +26,11 @@ export default function Register() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    let profilePicUrl = "";
 
     try {
+      let profilePicUrl = "";
+
+      // Upload profile picture if provided
       if (file) {
         const fileExt = file.name.split(".").pop();
         const filePath = `avatars/${form.email}.${fileExt}`;
@@ -42,48 +39,43 @@ export default function Register() {
           .from("avatars")
           .upload(filePath, file, { upsert: true });
 
-        if (uploadError) {
-          toast.error("📛 Failed to upload image: " + uploadError.message);
-          return;
-        }
+        if (uploadError) throw new Error(`Failed to upload image: ${uploadError.message}`);
 
         const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
         profilePicUrl = data.publicUrl;
       }
 
+      // Sign up user
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
         options: {
           data: {
             full_name: form.full_name,
-            profile_pic: profilePicUrl || null,
+            profile_picture_url: profilePicUrl || null, // match your `profiles` table
           },
         },
       });
 
-      if (signUpError) {
-        toast.error("❌ " + signUpError.message);
-        return;
-      }
+      if (signUpError) throw new Error(signUpError.message);
 
       const userId = signUpData?.user?.id;
-      if (!userId) {
-        toast.error("❌ Failed to retrieve user ID after signup");
-        return;
-      }
+      if (!userId) throw new Error("Failed to retrieve user ID after signup");
 
-      await supabase.from("profiles").upsert({
+      // Save profile in `profiles` table
+      const { error: dbError } = await supabase.from("profiles").upsert({
         id: userId,
         full_name: form.full_name,
         profile_picture_url: profilePicUrl || null,
         is_public: true,
       });
 
+      if (dbError) throw new Error(`Database error: ${dbError.message}`);
+
       toast.success("📬 Check your email to confirm your registration");
       navigate("/login");
     } catch (err: any) {
-      toast.error("⚠️ Registration failed: " + err.message);
+      toast.error(`⚠️ Registration failed: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -127,7 +119,7 @@ export default function Register() {
             />
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
+              onClick={() => setShowPassword(prev => !prev)}
               className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400"
             >
               {showPassword ? "🙈" : "👁️"}
@@ -165,4 +157,3 @@ export default function Register() {
     </div>
   );
 }
-
