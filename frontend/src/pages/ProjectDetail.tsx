@@ -3,6 +3,11 @@ import { useParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { PieChart, Pie, Cell } from "recharts";
 import ReactMarkdown from "react-markdown";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import { Navigation, Pagination } from "swiper/modules";
 
 interface Project {
   id: number;
@@ -10,6 +15,7 @@ interface Project {
   description: string;
   ai_score: number | null;
   ai_suggestions: string | string[] | null;
+  images?: string[]; // <-- Add images array
 }
 
 const COLORS = ["#10B981", "#E5E7EB"];
@@ -24,7 +30,7 @@ export default function ProjectDetail() {
     const fetchProject = async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id, title, description, ai_score, ai_suggestions")
+        .select("id, title, description, ai_score, ai_suggestions, images") // Fetch images
         .eq("id", id)
         .single();
 
@@ -59,8 +65,30 @@ export default function ProjectDetail() {
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4">
       <div className="bg-white p-8 rounded-xl shadow-lg max-w-3xl w-full space-y-8">
+        
         {/* Title */}
         <h1 className="text-3xl font-bold text-center text-gray-800">{project.title}</h1>
+
+        {/* Sliding Image Gallery */}
+        {project.images && project.images.length > 0 && (
+          <Swiper
+            modules={[Navigation, Pagination]}
+            navigation
+            pagination={{ clickable: true }}
+            loop
+            className="rounded-xl overflow-hidden shadow-md"
+          >
+            {project.images.map((imgUrl, idx) => (
+              <SwiperSlide key={idx}>
+                <img
+                  src={imgUrl}
+                  alt={`Project image ${idx + 1}`}
+                  className="w-full h-64 object-cover"
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        )}
 
         {/* AI Score */}
         <div className="flex flex-col items-center space-y-2">
