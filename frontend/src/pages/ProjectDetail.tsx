@@ -22,7 +22,7 @@ interface Project {
   ai_score: number | null;
   grade: number | null;
   ai_suggestions: string | null;
-  file_paths?: FilePath[] | string; // Could be array of JSON strings
+  file_paths?: FilePath[] | string | null; // optional
 }
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
@@ -50,17 +50,20 @@ export default function ProjectDetail() {
   if (loading) return <p className="text-center mt-20 text-gray-500">Loading project...</p>;
   if (!project) return <p className="text-center mt-20 text-red-500">Project not found.</p>;
 
-  // Parse file_paths correctly
+  // Parse file_paths safely
   let filePaths: FilePath[] = [];
-  if (typeof project.file_paths === "string") {
+  if (project.file_paths) {
     try {
-      const parsed = JSON.parse(project.file_paths); // This is an array of JSON strings
-      filePaths = parsed.map((item: string) => JSON.parse(item));
+      if (typeof project.file_paths === "string") {
+        const parsed = JSON.parse(project.file_paths); // array of JSON strings
+        filePaths = parsed.map((item: string) => JSON.parse(item));
+      } else if (Array.isArray(project.file_paths)) {
+        filePaths = project.file_paths;
+      }
     } catch (err) {
       console.error("Failed to parse file_paths:", err);
+      filePaths = [];
     }
-  } else if (Array.isArray(project.file_paths)) {
-    filePaths = project.file_paths;
   }
 
   const isImage = (url?: string) => {
