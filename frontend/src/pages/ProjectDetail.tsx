@@ -144,7 +144,7 @@ export default function ProjectDetail() {
                   outerRadius={80}
                   startAngle={90}
                   endAngle={-270}
-                  isAnimationActive={false} // prevents weird animation
+                  isAnimationActive={false}
                 >
                   <Cell fill="#3B82F6" /> {/* Blue slice */}
                   <Cell fill="#E5E7EB" /> {/* Gray slice */}
@@ -155,6 +155,7 @@ export default function ProjectDetail() {
               </div>
             </div>
           </div>
+        </div> {/* ✅ closed grid properly */}
 
         {/* Description */}
         <section>
