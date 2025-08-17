@@ -35,22 +35,28 @@ async def read_all_files(file_paths: List[Union[str, Dict[str, str]]]) -> str:
             content += text + "\n"
     return content.strip() or "No files submitted."
 
-async def generate_ai_score(description: str, file_paths: List[Dict[str, str]] | None = None, grade: float | None = None) -> float:
+# --- Score ---
+async def generate_ai_score(description: str, file_paths: List[Union[str, Dict[str, str]]] | None = None, grade: float | None = None) -> float:
     file_content = await read_all_files(file_paths) if file_paths else ""
+    
+    # Ensure grade is numeric
+    grade_text = str(grade) if grade is not None else "Grade not provided"
+
     payload = {
         "model": "llama3-8b-8192",
         "messages": [
             {
                 "role": "system",
-                "content": "Given the project title, description, uploaded files, and grade, evaluate the quality and provide a score from 1 to 10. Output only the numeric score."
+                "content": "Given the project description, uploaded files, and numeric grade, evaluate the project quality from 1 to 10. Output only the numeric score."
             },
             {
                 "role": "user",
-                "content": f"Project description: {description}\nFiles content:\n{file_content}\nGrade: {grade or 'N/A'}\nWhat is the score?"
+                "content": f"Description: {description}\nFiles content:\n{file_content}\nGrade: {grade_text}\nScore?"
             }
         ],
         "temperature": 0.7
     }
+
     async with httpx.AsyncClient() as client:
         res = await client.post(GROQ_API_URL, headers=HEADERS, json=payload)
         res.raise_for_status()
@@ -61,51 +67,63 @@ async def generate_ai_score(description: str, file_paths: List[Dict[str, str]] |
     except ValueError:
         return 0.0
 
+# --- Suggestions ---
 async def generate_suggestions(description: str, file_paths: List[Union[str, Dict[str, str]]] | None = None, grade: float | None = None) -> str:
     file_content = await read_all_files(file_paths) if file_paths else ""
+    
+    grade_text = str(grade) if grade is not None else "Grade not provided"
+
     payload = {
         "model": "llama3-8b-8192",
         "messages": [
             {
                 "role": "system",
                 "content": (
-                    "You are an expert tutor. Given a project description, uploaded files, and grade, "
-                    "provide detailed suggestions for improvement. Consider the grade: if low, prioritize fundamental issues; if high, suggest advanced enhancements."
+                    "You are an expert tutor. Using the project description, uploaded files, and numeric grade, "
+                    "provide detailed, actionable suggestions. "
+                    "If the grade is low, focus on fundamental issues; "
+                    "if the grade is high, suggest advanced enhancements."
                 )
             },
             {
                 "role": "user",
-                "content": f"Description: {description}\nFiles content:\n{file_content}\nGrade: {grade or 'N/A'}\nProvide actionable suggestions."
+                "content": f"Description: {description}\nFiles content:\n{file_content}\nGrade: {grade_text}\nProvide actionable suggestions."
             }
         ],
         "temperature": 0.7
     }
+
     async with httpx.AsyncClient() as client:
         res = await client.post(GROQ_API_URL, headers=HEADERS, json=payload)
         res.raise_for_status()
         return res.json()["choices"][0]["message"]["content"].strip()
 
+# --- Learning Path ---
 async def suggest_learning_path(title: str, description: str = "", file_paths: List[Union[str, Dict[str, str]]] | None = None, grade: float | None = None) -> str:
     file_content = await read_all_files(file_paths) if file_paths else ""
+    grade_text = str(grade) if grade is not None else "Grade not provided"
+
     payload = {
         "model": "llama3-8b-8192",
         "messages": [
             {
                 "role": "system",
-                "content": "You are a learning path recommendation assistant for programming students. Consider the project files, description, and grade to recommend next steps."
+                "content": "You are a learning path assistant for programming students. Use the project description, files, and numeric grade to recommend next steps."
             },
             {
                 "role": "user",
-                "content": f"Title: {title}\nDescription: {description}\nFiles content:\n{file_content}\nGrade: {grade or 'N/A'}\nWhat should the student learn next?"
+                "content": f"Title: {title}\nDescription: {description}\nFiles content:\n{file_content}\nGrade: {grade_text}\nWhat should the student learn next?"
             }
         ],
         "temperature": 0.7
     }
+
     async with httpx.AsyncClient() as client:
         res = await client.post(GROQ_API_URL, headers=HEADERS, json=payload)
         res.raise_for_status()
         return res.json()["choices"][0]["message"]["content"].strip()
 
+# --- Summary ---
 async def summarize_overall_insights(projects: list) -> str:
     """
     Summarizes a student's overall performance across projects.
@@ -121,12 +139,13 @@ async def summarize_overall_insights(projects: list) -> str:
         if grade is not None:
             total_grade += grade
             grade_count += 1
+        grade_text = str(grade) if grade is not None else "Grade not provided"
 
         content += (
             f"---\n"
             f"Title: {p['title']}\n"
             f"Description: {p['description']}\n"
-            f"Grade: {grade if grade is not None else 'N/A'}\n"
+            f"Grade: {grade_text}\n"
             f"Suggestions: {p.get('ai_suggestions', 'None')}\n"
             f"Files content:\n{file_content}\n"
         )
@@ -134,18 +153,18 @@ async def summarize_overall_insights(projects: list) -> str:
     avg_grade = total_grade / grade_count if grade_count else 0
 
     prompt = f"""
-You are an AI tutor evaluating a student's project portfolio. For each project, consider the description, files, grade, and suggestions.
+You are an AI tutor evaluating a student's project portfolio. For each project, consider the description, files, numeric grade, and suggestions.
 
-1. Summarize the student's strengths and weaknesses.
+1. Summarize strengths and weaknesses.
 2. Correlate performance with grades (average: {avg_grade:.2f}).
 3. Highlight patterns in project quality.
 4. Provide actionable recommendations for improvement.
-    """
+"""
 
     payload = {
         "model": "llama3-8b-8192",
         "messages": [
-            {"role": "system", "content": "You are an expert AI tutor that evaluates student performance using grades, suggestions, and submitted files."},
+            {"role": "system", "content": "You are an expert AI tutor that evaluates student performance using numeric grades, suggestions, and submitted files."},
             {"role": "user", "content": content + "\n" + prompt}
         ],
         "temperature": 0.7
