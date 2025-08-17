@@ -69,9 +69,13 @@ async def generate_ai_score(description: str, file_paths: List[Union[str, Dict[s
 
 # --- Suggestions ---
 async def generate_suggestions(description: str, file_paths: List[Union[str, Dict[str, str]]] | None = None, grade: float | None = None) -> str:
+    """
+    Generate AI suggestions for a project.
+    Uses the provided grade if available.
+    """
     file_content = await read_all_files(file_paths) if file_paths else ""
     
-    # Keep grade numeric
+    # Use the grade provided during upload
     grade_value = grade if grade is not None else "No grade provided"
 
     payload = {
@@ -88,7 +92,12 @@ async def generate_suggestions(description: str, file_paths: List[Union[str, Dic
             },
             {
                 "role": "user",
-                "content": f"Project Description: {description}\nFiles content:\n{file_content}\nNumeric Grade: {grade_value}\nProvide actionable suggestions based on the project and the numeric grade."
+                "content": (
+                    f"Project Description: {description}\n"
+                    f"Files content:\n{file_content}\n"
+                    f"Numeric Grade: {grade_value}\n"
+                    "Provide actionable suggestions based on the project and the numeric grade."
+                )
             }
         ],
         "temperature": 0.7
