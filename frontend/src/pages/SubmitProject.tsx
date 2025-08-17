@@ -52,7 +52,6 @@ export default function SubmitProject() {
           const { error: uploadError } = await supabase.storage
             .from("projects")
             .upload(filePath, file);
-
           if (uploadError) throw uploadError;
 
           const { data: publicUrlData } = supabase.storage
@@ -62,7 +61,7 @@ export default function SubmitProject() {
           uploadedFiles.push({ path: filePath, url: publicUrlData.publicUrl });
         }
 
-        // 🔹 Send to AI backend
+        // 🔹 Send all files to AI backend (optional)
         const aiRes = await fetch(`${import.meta.env.VITE_BACKEND_URL}/submit`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -71,7 +70,7 @@ export default function SubmitProject() {
             student_name: studentName,
             title: form.title,
             description: form.description,
-            file_url: uploadedFiles[0]?.url || null,
+            file_urls: uploadedFiles.map((f) => f.url), // send all URLs
           }),
         });
         if (!aiRes.ok) throw new Error("AI processing failed.");
@@ -84,8 +83,7 @@ export default function SubmitProject() {
           course,
           title: form.title,
           description: form.description,
-          file_url: uploadedFiles[0]?.url || null,
-          file_paths: uploadedFiles,
+          file_paths: uploadedFiles, // save all files here
           ai_score: ai.ai_score ?? null,
           ai_suggestions: ai.ai_suggestions ?? null,
           ai_learning_path: ai.ai_learning_path ?? null,
@@ -104,6 +102,7 @@ export default function SubmitProject() {
       }
     );
   };
+
 
   return (
     <form
