@@ -20,8 +20,6 @@ interface Project {
   file_url?: string;
 }
 
-const AI_COLORS = ["#10B981", "#E5E7EB"];   // Green for AI Score
-const GRADE_COLORS = ["#3B82F6", "#E5E7EB"]; // Blue for Grade
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
 
 export default function ProjectDetail() {
@@ -124,9 +122,8 @@ export default function ProjectDetail() {
                   startAngle={90}
                   endAngle={-270}
                 >
-                  {aiScoreData.map((_, i) => (
-                    <Cell key={i} fill={AI_COLORS[i]} />
-                  ))}
+                  <Cell fill="#10B981" /> {/* Green slice for Score */}
+                  <Cell fill="#E5E7EB" /> {/* Gray slice for Remaining */}
                 </Pie>
               </PieChart>
               <div className="absolute inset-0 flex items-center justify-center text-green-600 text-lg font-bold">
@@ -148,12 +145,8 @@ export default function ProjectDetail() {
                   startAngle={90}
                   endAngle={-270}
                 >
-                  {gradeData.map((entry, i) => (
-                    <Cell
-                      key={i}
-                      fill={entry.name === "Grade" ? "#3B82F6" : "#E5E7EB"}
-                    />
-                  ))}
+                  <Cell fill="#3B82F6" /> {/* Blue slice for Grade */}
+                  <Cell fill="#E5E7EB" /> {/* Gray slice for Remaining */}
                 </Pie>
               </PieChart>
               <div className="absolute inset-0 flex items-center justify-center text-blue-600 text-lg font-bold">
