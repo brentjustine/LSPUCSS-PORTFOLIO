@@ -17,7 +17,7 @@ interface Project {
   ai_score: number | null;
   grade: number | null;
   ai_suggestions: string | null;
-  file_paths?: { path: string; url: string }[]; // Updated: array of files
+  file_paths?: { path?: string; url?: string }[]; // Optional path/url
 }
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
@@ -42,10 +42,8 @@ export default function ProjectDetail() {
     })();
   }, [id]);
 
-  if (loading)
-    return <p className="text-center mt-20 text-gray-500">Loading project...</p>;
-  if (!project)
-    return <p className="text-center mt-20 text-red-500">Project not found.</p>;
+  if (loading) return <p className="text-center mt-20 text-gray-500">Loading project...</p>;
+  if (!project) return <p className="text-center mt-20 text-red-500">Project not found.</p>;
 
   const safeScore = project.ai_score ?? 0;
   const safeGrade = project.grade ?? 0;
@@ -73,7 +71,6 @@ export default function ProjectDetail() {
     return ext ? IMAGE_EXTENSIONS.includes(ext) : false;
   };
 
-  // Separate image files from other files
   const imageFiles = project.file_paths?.filter((f) => isImage(f.url)) ?? [];
   const otherFiles = project.file_paths?.filter((f) => !isImage(f.url)) ?? [];
 
@@ -97,7 +94,7 @@ export default function ProjectDetail() {
             {imageFiles.map((file, i) => (
               <SwiperSlide key={i}>
                 <img
-                  src={file.url}
+                  src={file.url ?? ""}
                   alt={`Project preview ${i}`}
                   className="w-full h-72 object-cover"
                 />
@@ -114,12 +111,12 @@ export default function ProjectDetail() {
               {otherFiles.map((file, i) => (
                 <li key={i}>
                   <a
-                    href={file.url}
+                    href={file.url ?? "#"}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 underline"
                   >
-                    {file.path.split("/").pop()}
+                    {file.path?.split("/").pop() ?? "Unnamed file"}
                   </a>
                 </li>
               ))}
