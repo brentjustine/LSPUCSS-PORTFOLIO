@@ -68,13 +68,14 @@ async def generate_ai_score(description: str, file_paths: List[Union[str, Dict[s
         return 0.0
 
 # --- Suggestions ---
-async def generate_suggestions(project: dict, description: str | None = None, file_paths: List[Union[str, Dict[str, str]]] | None = None, grade: float | None = None) -> str:
-    # Use project values if arguments are None
-    description = description or project.get("description", "")
-    file_paths = file_paths or project.get("file_paths", [])
-    grade = grade if grade is not None else project.get("grade")
-
+async def generate_suggestions(description: str, file_paths: List[Union[str, Dict[str, str]]] | None = None, grade: float | None = None) -> str:
+    """
+    Generate AI suggestions for a project.
+    Uses the provided grade if available.
+    """
     file_content = await read_all_files(file_paths) if file_paths else ""
+    
+    # Use the grade provided during upload
     grade_value = grade if grade is not None else "No grade provided"
 
     payload = {
@@ -83,10 +84,9 @@ async def generate_suggestions(project: dict, description: str | None = None, fi
             {
                 "role": "system",
                 "content": (
-                    "You are an expert tutor. Evaluate the student's project using the project description, uploaded files, AND the numeric grade. "
-                    "The numeric grade must influence your suggestions. "
+                    "You are an expert tutor. Evaluate the student's project using the project description, uploaded files, AND the grade if available. "
                     "If the grade is low, focus on fundamental issues; if high, suggest advanced enhancements. "
-                    "Include reasoning referencing the grade, and output actionable suggestions only."
+                    "Include reasoning referencing to corellate with the grade, and output actionable suggestions and feedback only."
                 )
             },
             {
@@ -95,18 +95,17 @@ async def generate_suggestions(project: dict, description: str | None = None, fi
                     f"Project Description: {description}\n"
                     f"Files content:\n{file_content}\n"
                     f"Numeric Grade: {grade_value}\n"
-                    "Provide actionable suggestions based on the project and the numeric grade."
+                    "Provide actionable suggestions based on the project and the numeric grade if available."
                 )
             }
         ],
-        "temperature": 0.7
+        "temperature": 0.5
     }
 
     async with httpx.AsyncClient() as client:
         res = await client.post(GROQ_API_URL, headers=HEADERS, json=payload)
         res.raise_for_status()
         return res.json()["choices"][0]["message"]["content"].strip()
-
 
 
 # --- Learning Path ---
