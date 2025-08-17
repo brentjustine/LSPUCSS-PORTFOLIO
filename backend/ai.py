@@ -71,7 +71,8 @@ async def generate_ai_score(description: str, file_paths: List[Union[str, Dict[s
 async def generate_suggestions(description: str, file_paths: List[Union[str, Dict[str, str]]] | None = None, grade: float | None = None) -> str:
     file_content = await read_all_files(file_paths) if file_paths else ""
     
-    grade_text = str(grade) if grade is not None else "Grade not provided"
+    # Keep grade numeric
+    grade_value = grade if grade is not None else "No grade provided"
 
     payload = {
         "model": "llama3-8b-8192",
@@ -79,15 +80,15 @@ async def generate_suggestions(description: str, file_paths: List[Union[str, Dic
             {
                 "role": "system",
                 "content": (
-                    "You are an expert tutor. Using the project description, uploaded files, and numeric grade, "
-                    "provide detailed, actionable suggestions. "
-                    "If the grade is low, focus on fundamental issues; "
-                    "if the grade is high, suggest advanced enhancements."
+                    "You are an expert tutor. Evaluate the student's project using the project description, uploaded files, AND the numeric grade. "
+                    "The numeric grade must influence your suggestions. "
+                    "If the grade is low, focus on fundamental issues; if high, suggest advanced enhancements. "
+                    "Include reasoning referencing the grade, and output actionable suggestions only."
                 )
             },
             {
                 "role": "user",
-                "content": f"Description: {description}\nFiles content:\n{file_content}\nGrade: {grade_text}\nProvide actionable suggestions."
+                "content": f"Project Description: {description}\nFiles content:\n{file_content}\nNumeric Grade: {grade_value}\nProvide actionable suggestions based on the project and the numeric grade."
             }
         ],
         "temperature": 0.7
@@ -97,6 +98,7 @@ async def generate_suggestions(description: str, file_paths: List[Union[str, Dic
         res = await client.post(GROQ_API_URL, headers=HEADERS, json=payload)
         res.raise_for_status()
         return res.json()["choices"][0]["message"]["content"].strip()
+
 
 # --- Learning Path ---
 async def suggest_learning_path(title: str, description: str = "", file_paths: List[Union[str, Dict[str, str]]] | None = None, grade: float | None = None) -> str:
