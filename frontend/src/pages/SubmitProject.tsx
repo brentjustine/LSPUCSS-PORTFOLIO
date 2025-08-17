@@ -86,12 +86,10 @@ export default function SubmitProject() {
           file_paths: uploadedFiles, // save all files here
           ai_score: ai.ai_score ?? null,
           ai_suggestions: ai.ai_suggestions ?? null,
-          ai_learning_path: ai.ai_learning_path ?? null,
           grade:
             form.grade.trim() !== "" ? Math.max(75, Math.min(100, Number(form.grade))) : null,
         });
         if (dbError) throw dbError;
-
         localStorage.setItem("ai_refresh_needed", "true");
         navigate("/");
       })(),
