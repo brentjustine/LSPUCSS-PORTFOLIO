@@ -2,6 +2,7 @@ import os
 import httpx
 from dotenv import load_dotenv
 from utils import extract_text_from_file_url
+from typing import List, Dict
 
 load_dotenv()
 
@@ -12,21 +13,31 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-async def generate_ai_score(description: str, file_url: str | None = None) -> float:
-    file_content = await extract_text_from_file_url(file_url) if file_url else ""
+async def read_all_files(file_paths: List[Dict[str, str]]) -> str:
+    """Extract text from all uploaded files"""
+    content = ""
+    for f in file_paths:
+        url = f.get("url")
+        if url:
+            content += await extract_text_from_file_url(url) + "\n"
+    return content.strip()
+
+
+async def generate_ai_score(description: str, file_paths: List[Dict[str, str]] | None = None, grade: float | None = None) -> float:
+    file_content = await read_all_files(file_paths) if file_paths else ""
     payload = {
         "model": "llama3-8b-8192",
         "messages": [
             {
                 "role": "system",
-                "content": "Given the project title and description, evaluate the quality, and provide a score in 1/10. Output only the numeric score, no words."
+                "content": "Given the project title, description, uploaded files, and grade, evaluate the quality and provide a score from 1 to 10. Output only the numeric score."
             },
             {
                 "role": "user",
-                "content": f"Project description: {description}\n\nFile contents: {file_content}\n\nWhat is the score?"
+                "content": f"Project description: {description}\nFiles content:\n{file_content}\nGrade: {grade or 'N/A'}\nWhat is the score?"
             }
         ],
-        "temperature": 0.7 
+        "temperature": 0.7
     }
     async with httpx.AsyncClient() as client:
         res = await client.post(GROQ_API_URL, headers=HEADERS, json=payload)
@@ -36,17 +47,22 @@ async def generate_ai_score(description: str, file_url: str | None = None) -> fl
     try:
         return float(score_text)
     except ValueError:
-        # Fallback in case the AI outputs something unexpected
         return 0.0
 
 
-async def generate_suggestions(description: str, file_url: str | None = None) -> str:
-    file_content = await extract_text_from_file_url(file_url) if file_url else ""
+async def generate_suggestions(description: str, file_paths: List[Dict[str, str]] | None = None, grade: float | None = None) -> str:
+    file_content = await read_all_files(file_paths) if file_paths else ""
     payload = {
         "model": "llama3-8b-8192",
         "messages": [
-            {"role": "system", "content": "Given the project title and description, evaluate the quality, give recommendations and provide a feedback."},
-            {"role": "user", "content": f"Project description: {description}\n\nFile contents: {file_content}\n\nWhat are some suggestions for improving this project?"}
+            {
+                "role": "system",
+                "content": "Given the project description, uploaded files, and grade, evaluate the project and provide detailed suggestions for improvement."
+            },
+            {
+                "role": "user",
+                "content": f"Project description: {description}\nFiles content:\n{file_content}\nGrade: {grade or 'N/A'}\nProvide suggestions to improve this project."
+            }
         ],
         "temperature": 0.7
     }
@@ -55,13 +71,20 @@ async def generate_suggestions(description: str, file_url: str | None = None) ->
         res.raise_for_status()
         return res.json()["choices"][0]["message"]["content"].strip()
 
-async def suggest_learning_path(title: str, description: str = "", file_url: str | None = None) -> str:
-    file_content = await extract_text_from_file_url(file_url) if file_url else ""
+
+async def suggest_learning_path(title: str, description: str = "", file_paths: List[Dict[str, str]] | None = None, grade: float | None = None) -> str:
+    file_content = await read_all_files(file_paths) if file_paths else ""
     payload = {
         "model": "llama3-8b-8192",
         "messages": [
-            {"role": "system", "content": "You are a learning path recommendation assistant for programming students."},
-            {"role": "user", "content": f"Title: {title}\nDescription: {description}\n\nFile content: {file_content}\n\nWhat should I learn next?"}
+            {
+                "role": "system",
+                "content": "You are a learning path recommendation assistant for programming students. Consider the project files, description, and grade to recommend next steps."
+            },
+            {
+                "role": "user",
+                "content": f"Title: {title}\nDescription: {description}\nFiles content:\n{file_content}\nGrade: {grade or 'N/A'}\nWhat should the student learn next?"
+            }
         ],
         "temperature": 0.7
     }
@@ -69,15 +92,30 @@ async def suggest_learning_path(title: str, description: str = "", file_url: str
         res = await client.post(GROQ_API_URL, headers=HEADERS, json=payload)
         res.raise_for_status()
         return res.json()["choices"][0]["message"]["content"].strip()
+
 
 async def summarize_overall_insights(projects: list) -> str:
-    content = "\n\n".join([f"Title: {p['title']}\nDescription: {p['description']}\nSuggestions: {p.get('ai_suggestions', '')}" for p in projects])
+    """
+    Summarizes the student's overall performance using all files and grades.
+    Each project should have: 'title', 'description', 'ai_suggestions', 'file_paths', 'grade'
+    """
+    content = ""
+    for p in projects:
+        file_content = await read_all_files(p.get("file_paths", []))
+        content += (
+            f"Title: {p['title']}\n"
+            f"Description: {p['description']}\n"
+            f"Grade: {p.get('grade', 'N/A')}\n"
+            f"Suggestions: {p.get('ai_suggestions', '')}\n"
+            f"Files content:\n{file_content}\n\n"
+        )
+
     prompt = f"""
-    You are an AI tutor evaluating a student's project portfolio. Below are several projects they submitted:
+You are an AI tutor evaluating a student's project portfolio. Below are several projects they submitted:
 
-    {content}
+{content}
 
-    Summarize the student's overall strengths and weaknesses, and provide recommendations on how they can improve.
+Summarize the student's overall strengths and weaknesses, correlate with grades, and provide recommendations on how they can improve.
     """
 
     payload = {
