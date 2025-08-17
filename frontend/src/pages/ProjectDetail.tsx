@@ -55,10 +55,8 @@ export default function ProjectDetail() {
   if (project.file_paths) {
     try {
       if (typeof project.file_paths === "string") {
-        // First parse gives array of strings
-        const parsedArray: string[] = JSON.parse(project.file_paths);
-        // Then parse each string into an object
-        filePaths = parsedArray.map((item) => JSON.parse(item));
+        const parsedArray: string[] = JSON.parse(project.file_paths); // Step 1
+        filePaths = parsedArray.map((item) => JSON.parse(item));      // Step 2
       } else if (Array.isArray(project.file_paths)) {
         filePaths = project.file_paths;
       }
@@ -67,6 +65,7 @@ export default function ProjectDetail() {
       filePaths = [];
     }
   }
+
 
   const isImage = (url?: string) => {
     if (!url) return false;
