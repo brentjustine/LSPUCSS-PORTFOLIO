@@ -35,18 +35,18 @@ async def read_all_files(file_paths: List[Union[str, Dict[str, str]]]) -> str:
             content += text + "\n"
     return content.strip() or "No files submitted."
 
-async def generate_ai_score(description: str, file_paths: List[Union[str, Dict[str, str]]] | None = None, grade: float | None = None) -> float:
+async def generate_ai_score(description: str, file_paths: List[Dict[str, str]] | None = None, grade: float | None = None) -> float:
     file_content = await read_all_files(file_paths) if file_paths else ""
     payload = {
         "model": "llama3-8b-8192",
         "messages": [
             {
                 "role": "system",
-                "content": "Evaluate the quality of a student's project given its description, uploaded files, and grade. Output only a numeric score from 1 to 10."
+                "content": "Given the project title, description, uploaded files, and grade, evaluate the quality and provide a score from 1 to 10. Output only the numeric score."
             },
             {
                 "role": "user",
-                "content": f"Description: {description}\nFiles content:\n{file_content}\nGrade: {grade or 'N/A'}\nWhat is the score?"
+                "content": f"Project description: {description}\nFiles content:\n{file_content}\nGrade: {grade or 'N/A'}\nWhat is the score?"
             }
         ],
         "temperature": 0.7
@@ -55,6 +55,7 @@ async def generate_ai_score(description: str, file_paths: List[Union[str, Dict[s
         res = await client.post(GROQ_API_URL, headers=HEADERS, json=payload)
         res.raise_for_status()
         score_text = res.json()["choices"][0]["message"]["content"].strip()
+    
     try:
         return float(score_text)
     except ValueError:
