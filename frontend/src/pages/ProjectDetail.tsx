@@ -55,8 +55,10 @@ export default function ProjectDetail() {
   if (project.file_paths) {
     try {
       if (typeof project.file_paths === "string") {
-        const parsed = JSON.parse(project.file_paths); // array of JSON strings
-        filePaths = parsed.map((item: string) => JSON.parse(item));
+        // First parse gives array of strings
+        const parsedArray: string[] = JSON.parse(project.file_paths);
+        // Then parse each string into an object
+        filePaths = parsedArray.map((item) => JSON.parse(item));
       } else if (Array.isArray(project.file_paths)) {
         filePaths = project.file_paths;
       }
