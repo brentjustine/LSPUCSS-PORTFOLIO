@@ -155,6 +155,7 @@ export default function ProjectDetail() {
               </div>
             </div>
           </div>
+
         {/* Description */}
         <section>
           <h2 className="text-lg font-semibold text-gray-700 mb-2">
