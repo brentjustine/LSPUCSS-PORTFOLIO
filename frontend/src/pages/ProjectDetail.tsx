@@ -144,9 +144,10 @@ export default function ProjectDetail() {
                   outerRadius={80}
                   startAngle={90}
                   endAngle={-270}
+                  isAnimationActive={false} // prevents weird animation
                 >
-                  <Cell fill="#3B82F6" /> {/* Blue slice for Grade */}
-                  <Cell fill="#E5E7EB" /> {/* Gray slice for Remaining */}
+                  <Cell fill="#3B82F6" /> {/* Blue slice */}
+                  <Cell fill="#E5E7EB" /> {/* Gray slice */}
                 </Pie>
               </PieChart>
               <div className="absolute inset-0 flex items-center justify-center text-blue-600 text-lg font-bold">
@@ -154,8 +155,6 @@ export default function ProjectDetail() {
               </div>
             </div>
           </div>
-        </div>
-
         {/* Description */}
         <section>
           <h2 className="text-lg font-semibold text-gray-700 mb-2">
