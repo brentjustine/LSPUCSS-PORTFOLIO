@@ -67,9 +67,13 @@ export default function UserDetail() {
           />
           <h2 className="text-2xl font-bold mt-3 text-gray-800">{profile.full_name}</h2>
           <p className="text-gray-600 text-sm">{profile.email}</p>
-          <p className="mt-2 text-gray-700 text-sm">{profile.bio || 'No bio provided.'}</p>
+          {profile.course && (
+            <p className="text-gray-500 text-sm mt-1">📘 {profile.course}</p>
+          )}
+          <p className="mt-2 text-gray-700 text-sm">
+            {profile.bio || 'No bio provided.'}
+          </p>
         </div>
-
         {/* Projects Section */}
         <div className="bg-white p-6 rounded-xl shadow space-y-4">
           <h3 className="text-xl font-bold text-gray-800 border-b pb-2">📁 Public Projects</h3>

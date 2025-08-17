@@ -102,9 +102,13 @@ export default function Users() {
                       {u.full_name}
                     </Link>
                     <p className="text-sm text-gray-600">{u.bio || 'No bio available'}</p>
+                    {u.course && (
+                      <p className="text-sm text-gray-500 mt-1">
+                        📘 {u.course}
+                      </p>
+                    )}
                   </div>
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Pie Chart */}
                   <div className="flex justify-center">
