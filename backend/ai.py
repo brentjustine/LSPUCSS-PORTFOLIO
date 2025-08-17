@@ -68,26 +68,11 @@ async def generate_ai_score(description: str, file_paths: List[Union[str, Dict[s
         return 0.0
 
 # --- Suggestions ---
-async def generate_suggestions(
-    project: dict,
-    description: str | None = None,
-    file_paths: List[Union[str, Dict[str, str]]] | None = None,
-    grade: float | None = None
-) -> str:
-    """
-    Generate AI suggestions for a project.
-    - Uses the grade from the project dict if no grade is provided.
-    - Uses description and file_paths from the project dict if not provided.
-    """
-    # Use project values if arguments are None
-    description = description or project.get("description", "")
-    file_paths = file_paths or project.get("file_paths", [])
-    grade = grade if grade is not None else project.get("grade")
-
-    # Read all file contents
+async def generate_suggestions(description: str, file_paths: List[Union[str, Dict[str, str]]] | None = None, grade: float | None = None) -> str:
+    # Read all file contents just like in read_all_files
     file_content = await read_all_files(file_paths) if file_paths else ""
 
-    # Ensure grade value
+    # Use the grade provided during upload
     grade_value = grade if grade is not None else "No grade provided"
 
     payload = {
@@ -119,7 +104,6 @@ async def generate_suggestions(
         res = await client.post(GROQ_API_URL, headers=HEADERS, json=payload)
         res.raise_for_status()
         return res.json()["choices"][0]["message"]["content"].strip()
-
 
 
 # --- Learning Path ---
