@@ -22,7 +22,7 @@ interface Project {
   ai_score: number | null;
   grade: number | null;
   ai_suggestions: string | null;
-  file_paths?: FilePath[] | string; // Can be parsed JSON
+  file_paths?: FilePath[] | string; // Could be array of JSON strings
 }
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
@@ -50,11 +50,12 @@ export default function ProjectDetail() {
   if (loading) return <p className="text-center mt-20 text-gray-500">Loading project...</p>;
   if (!project) return <p className="text-center mt-20 text-red-500">Project not found.</p>;
 
-  // Parse file_paths if it's a string
+  // Parse file_paths correctly
   let filePaths: FilePath[] = [];
   if (typeof project.file_paths === "string") {
     try {
-      filePaths = JSON.parse(project.file_paths);
+      const parsed = JSON.parse(project.file_paths); // This is an array of JSON strings
+      filePaths = parsed.map((item: string) => JSON.parse(item));
     } catch (err) {
       console.error("Failed to parse file_paths:", err);
     }
@@ -120,7 +121,7 @@ export default function ProjectDetail() {
           </Swiper>
         )}
 
-        {/* Non-image files */}
+        {/* Other files */}
         {otherFiles.length > 0 && (
           <section className="mt-4">
             <h2 className="text-lg font-semibold text-gray-700 mb-2">📁 Other Files</h2>
