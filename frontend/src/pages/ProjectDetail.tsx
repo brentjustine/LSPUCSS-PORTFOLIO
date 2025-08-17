@@ -10,6 +10,11 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
+interface FilePath {
+  path?: string;
+  url?: string;
+}
+
 interface Project {
   id: number;
   title: string;
@@ -17,7 +22,7 @@ interface Project {
   ai_score: number | null;
   grade: number | null;
   ai_suggestions: string | null;
-  file_paths?: { path?: string; url?: string }[]; // Optional path/url
+  file_paths?: FilePath[] | string; // Can be parsed JSON
 }
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
@@ -45,6 +50,27 @@ export default function ProjectDetail() {
   if (loading) return <p className="text-center mt-20 text-gray-500">Loading project...</p>;
   if (!project) return <p className="text-center mt-20 text-red-500">Project not found.</p>;
 
+  // Parse file_paths if it's a string
+  let filePaths: FilePath[] = [];
+  if (typeof project.file_paths === "string") {
+    try {
+      filePaths = JSON.parse(project.file_paths);
+    } catch (err) {
+      console.error("Failed to parse file_paths:", err);
+    }
+  } else if (Array.isArray(project.file_paths)) {
+    filePaths = project.file_paths;
+  }
+
+  const isImage = (url?: string) => {
+    if (!url) return false;
+    const ext = url.split(".").pop()?.toLowerCase();
+    return ext ? IMAGE_EXTENSIONS.includes(ext) : false;
+  };
+
+  const imageFiles = filePaths.filter((f) => isImage(f.url));
+  const otherFiles = filePaths.filter((f) => !isImage(f.url));
+
   const safeScore = project.ai_score ?? 0;
   const safeGrade = project.grade ?? 0;
 
@@ -65,15 +91,6 @@ export default function ProjectDetail() {
       ? `${description.slice(0, 150)}...`
       : description;
 
-  const isImage = (url?: string) => {
-    if (!url) return false;
-    const ext = url.split(".").pop()?.toLowerCase();
-    return ext ? IMAGE_EXTENSIONS.includes(ext) : false;
-  };
-
-  const imageFiles = project.file_paths?.filter((f) => isImage(f.url)) ?? [];
-  const otherFiles = project.file_paths?.filter((f) => !isImage(f.url)) ?? [];
-
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100 px-4">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-3xl w-full space-y-10">
@@ -82,7 +99,7 @@ export default function ProjectDetail() {
           {project.title}
         </h1>
 
-        {/* Image Previews */}
+        {/* Image Swiper */}
         {imageFiles.length > 0 && (
           <Swiper
             modules={[Navigation, Pagination]}
@@ -95,7 +112,7 @@ export default function ProjectDetail() {
               <SwiperSlide key={i}>
                 <img
                   src={file.url ?? ""}
-                  alt={`Project preview ${i}`}
+                  alt={file.path?.split("/").pop() ?? `Image ${i}`}
                   className="w-full h-72 object-cover"
                 />
               </SwiperSlide>
