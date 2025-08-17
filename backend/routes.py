@@ -19,14 +19,10 @@ async def submit_project(project: ProjectIn):
 
         ai_score = await generate_ai_score(project.description, project.file_url)
         ai_suggestions = await generate_suggestions(project.description, project.file_url)
-        ai_learning_path = await suggest_learning_path(
-            project.title, project.description, project.file_url
-        )
 
         return {
             "ai_score": ai_score,
             "ai_suggestions": ai_suggestions,
-            "ai_learning_path": ai_learning_path,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
