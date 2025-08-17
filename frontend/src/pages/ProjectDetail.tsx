@@ -148,8 +148,11 @@ export default function ProjectDetail() {
                   startAngle={90}
                   endAngle={-270}
                 >
-                  {gradeData.map((_, i) => (
-                    <Cell key={i} fill={GRADE_COLORS[i]} />
+                  {gradeData.map((entry, i) => (
+                    <Cell
+                      key={i}
+                      fill={entry.name === "Grade" ? "#3B82F6" : "#E5E7EB"}
+                    />
                   ))}
                 </Pie>
               </PieChart>
