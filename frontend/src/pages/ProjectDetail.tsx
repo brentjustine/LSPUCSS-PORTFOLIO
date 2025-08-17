@@ -4,10 +4,11 @@ import { supabase } from "../lib/supabaseClient";
 import { PieChart, Pie, Cell } from "recharts";
 import ReactMarkdown from "react-markdown";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import { Navigation, Pagination } from "swiper/modules";
 
 interface Project {
   id: number;
@@ -37,42 +38,44 @@ export default function ProjectDetail() {
         .eq("id", id)
         .single();
 
-      if (error) console.error("Failed to fetch project:", error);
+      if (error) console.error("❌ Failed to fetch project:", error);
       setProject(data ?? null);
       setLoading(false);
     })();
   }, [id]);
 
   if (loading) {
-    return <div className="text-center mt-20 text-gray-600">Loading project...</div>;
-  }
-  if (!project) {
-    return <div className="text-center mt-20 text-red-500">Project not found.</div>;
+    return <p className="text-center mt-20 text-gray-500">Loading project...</p>;
   }
 
-  // AI Score data (out of 10)
+  if (!project) {
+    return <p className="text-center mt-20 text-red-500">Project not found.</p>;
+  }
+
+  // Safe values
   const safeScore = project.ai_score ?? 0;
+  const safeGrade = project.grade ?? 0;
+
+  // Chart data
   const aiScoreData = [
     { name: "Score", value: safeScore },
     { name: "Remaining", value: Math.max(0, 10 - safeScore) },
   ];
 
-  // Grade data (out of 100)
-  const safeGrade = project.grade ?? 0;
   const gradeData = [
     { name: "Grade", value: safeGrade },
     { name: "Remaining", value: Math.max(0, 100 - safeGrade) },
   ];
 
-  // Description handling
-  const descriptionText = project.description ?? "";
-  const descriptionTooLong = descriptionText.length > 150;
+  // Description logic
+  const description = project.description ?? "";
+  const descriptionTooLong = description.length > 150;
   const displayedDescription =
     descriptionTooLong && !showFullDescription
-      ? `${descriptionText.slice(0, 150)}...`
-      : descriptionText;
+      ? `${description.slice(0, 150)}...`
+      : description;
 
-  // Check if uploaded file is an image
+  // File preview check
   const isImage = (url?: string) => {
     if (!url) return false;
     const ext = url.split(".").pop()?.toLowerCase();
@@ -80,14 +83,14 @@ export default function ProjectDetail() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4">
-      <div className="bg-white p-8 rounded-xl shadow-lg max-w-3xl w-full space-y-8">
+    <div className="flex justify-center items-center min-h-screen bg-gray-100 px-4">
+      <div className="bg-white p-8 rounded-2xl shadow-xl max-w-3xl w-full space-y-10">
         {/* Title */}
-        <h1 className="text-3xl font-bold text-center text-gray-800">
+        <h1 className="text-3xl font-extrabold text-center text-gray-800">
           {project.title}
         </h1>
 
-        {/* Image preview */}
+        {/* File Preview */}
         {project.file_url && isImage(project.file_url) && (
           <Swiper
             modules={[Navigation, Pagination]}
@@ -99,81 +102,84 @@ export default function ProjectDetail() {
             <SwiperSlide>
               <img
                 src={project.file_url}
-                alt="Project"
-                className="w-full h-64 object-cover"
+                alt="Project preview"
+                className="w-full h-72 object-cover"
               />
             </SwiperSlide>
           </Swiper>
         )}
 
-        {/* AI Score */}
-        <div className="flex flex-col items-center space-y-2">
-          <h2 className="text-lg font-semibold text-gray-700">AI Score</h2>
-          <div className="relative">
-            <PieChart width={200} height={200}>
-              <Pie
-                data={aiScoreData}
-                dataKey="value"
-                innerRadius={60}
-                outerRadius={80}
-                startAngle={90}
-                endAngle={-270}
-              >
-                {aiScoreData.map((_, index) => (
-                  <Cell key={index} fill={AI_COLORS[index]} />
-                ))}
-              </Pie>
-            </PieChart>
-            <div className="absolute inset-0 flex items-center justify-center text-green-600 text-xl font-bold">
-              {safeScore.toFixed(1)} / 10
+        {/* AI Score & Grade side by side */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          {/* AI Score */}
+          <div className="flex flex-col items-center">
+            <h2 className="text-lg font-semibold text-gray-700">🤖 AI Score</h2>
+            <div className="relative">
+              <PieChart width={180} height={180}>
+                <Pie
+                  data={aiScoreData}
+                  dataKey="value"
+                  innerRadius={60}
+                  outerRadius={80}
+                  startAngle={90}
+                  endAngle={-270}
+                >
+                  {aiScoreData.map((_, i) => (
+                    <Cell key={i} fill={AI_COLORS[i]} />
+                  ))}
+                </Pie>
+              </PieChart>
+              <div className="absolute inset-0 flex items-center justify-center text-green-600 text-lg font-bold">
+                {safeScore.toFixed(1)} / 10
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Grade */}
-        <div className="flex flex-col items-center space-y-2">
-          <h2 className="text-lg font-semibold text-gray-700">Grade</h2>
-          <div className="relative">
-            <PieChart width={200} height={200}>
-              <Pie
-                data={gradeData}
-                dataKey="value"
-                innerRadius={60}
-                outerRadius={80}
-                startAngle={90}
-                endAngle={-270}
-              >
-                {gradeData.map((_, index) => (
-                  <Cell key={index} fill={GRADE_COLORS[index]} />
-                ))}
-              </Pie>
-            </PieChart>
-            <div className="absolute inset-0 flex items-center justify-center text-blue-600 text-xl font-bold">
-              {safeGrade} / 100
+          {/* Grade */}
+          <div className="flex flex-col items-center">
+            <h2 className="text-lg font-semibold text-gray-700">📊 Grade</h2>
+            <div className="relative">
+              <PieChart width={180} height={180}>
+                <Pie
+                  data={gradeData}
+                  dataKey="value"
+                  innerRadius={60}
+                  outerRadius={80}
+                  startAngle={90}
+                  endAngle={-270}
+                >
+                  {gradeData.map((_, i) => (
+                    <Cell key={i} fill={GRADE_COLORS[i]} />
+                  ))}
+                </Pie>
+              </PieChart>
+              <div className="absolute inset-0 flex items-center justify-center text-blue-600 text-lg font-bold">
+                {safeGrade} / 100
+              </div>
             </div>
           </div>
         </div>
 
         {/* Description */}
-        <div>
+        <section>
           <h2 className="text-lg font-semibold text-gray-700 mb-2">
             📄 Project Description
           </h2>
           <p className="text-gray-600 text-sm leading-relaxed">
             {displayedDescription}
             {descriptionTooLong && (
-              <span
-                onClick={() => setShowFullDescription((prev) => !prev)}
-                className="text-blue-600 ml-2 cursor-pointer underline"
+              <button
+                onClick={() => setShowFullDescription(!showFullDescription)}
+                className="ml-2 text-blue-600 underline"
               >
                 {showFullDescription ? "Show less" : "Read more"}
-              </span>
+              </button>
             )}
           </p>
-        </div>
+        </section>
 
         {/* AI Suggestions */}
-        <div>
+        <section>
           <h2 className="text-lg font-semibold text-green-700 mb-3">
             🌟 AI Suggestions
           </h2>
@@ -184,7 +190,7 @@ export default function ProjectDetail() {
           ) : (
             <p className="text-gray-500 text-sm">No AI suggestions available.</p>
           )}
-        </div>
+        </section>
       </div>
     </div>
   );
