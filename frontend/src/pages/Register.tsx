@@ -8,7 +8,7 @@ export default function Register() {
     full_name: "",
     email: "",
     password: "",
-    course: "", // added course field
+    course: "",
   });
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -50,34 +50,20 @@ export default function Register() {
         profilePicUrl = data.publicUrl;
       }
 
-      // Sign up user
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      // Sign up user → trigger handles inserting profile
+      const { error: signUpError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
         options: {
           data: {
             full_name: form.full_name,
             profile_picture_url: profilePicUrl || null,
-            course: form.course, // store in auth metadata too (optional)
+            course: form.course,
           },
         },
       });
 
       if (signUpError) throw new Error(signUpError.message);
-
-      const userId = signUpData?.user?.id;
-      if (!userId) throw new Error("Failed to retrieve user ID after signup");
-
-      // Save profile in `profiles` table
-      const { error: dbError } = await supabase.from("profiles").upsert({
-        id: userId,
-        full_name: form.full_name,
-        profile_picture_url: profilePicUrl || null,
-        is_public: true,
-        course: form.course, // store in profiles table
-      });
-
-      if (dbError) throw new Error(`Database error: ${dbError.message}`);
 
       toast.success("📬 Check your email to confirm your registration");
       navigate("/login");
@@ -133,7 +119,6 @@ export default function Register() {
             </button>
           </div>
 
-          {/* Course dropdown */}
           <select
             name="course"
             value={form.course}
