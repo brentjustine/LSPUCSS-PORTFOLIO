@@ -11,8 +11,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 interface FilePath {
-  path?: string;
-  url?: string;
+  url: string;
 }
 
 interface Project {
@@ -22,7 +21,7 @@ interface Project {
   ai_score: number | null;
   grade: number | null;
   ai_suggestions: string | null;
-  file_paths?: FilePath[] | string | null; // optional
+  file_paths?: string[] | null; // array of JSON strings
 }
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
@@ -50,28 +49,18 @@ export default function ProjectDetail() {
   if (loading) return <p className="text-center mt-20 text-gray-500">Loading project...</p>;
   if (!project) return <p className="text-center mt-20 text-red-500">Project not found.</p>;
 
-  // Parse file_paths safely
+  // Parse file_paths correctly
   let filePaths: FilePath[] = [];
   if (project.file_paths) {
     try {
-      if (typeof project.file_paths === "string") {
-        const parsedArray: string[] = JSON.parse(project.file_paths); // Step 1
-        filePaths = parsedArray.map((item) => JSON.parse(item));      // Step 2
-      } else if (Array.isArray(project.file_paths)) {
-        filePaths = project.file_paths;
-      }
+      filePaths = project.file_paths.map((item) => JSON.parse(item));
     } catch (err) {
       console.error("Failed to parse file_paths:", err);
-      filePaths = [];
     }
   }
 
-
-  const isImage = (url?: string) => {
-    if (!url) return false;
-    const ext = url.split(".").pop()?.toLowerCase();
-    return ext ? IMAGE_EXTENSIONS.includes(ext) : false;
-  };
+  const isImage = (url: string) =>
+    IMAGE_EXTENSIONS.some((ext) => url.toLowerCase().endsWith(ext));
 
   const imageFiles = filePaths.filter((f) => isImage(f.url));
   const otherFiles = filePaths.filter((f) => !isImage(f.url));
@@ -99,7 +88,6 @@ export default function ProjectDetail() {
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100 px-4">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-3xl w-full space-y-10">
-        {/* Title */}
         <h1 className="text-3xl font-extrabold text-center text-gray-800">
           {project.title}
         </h1>
@@ -116,8 +104,8 @@ export default function ProjectDetail() {
             {imageFiles.map((file, i) => (
               <SwiperSlide key={i}>
                 <img
-                  src={file.url ?? ""}
-                  alt={file.path?.split("/").pop() ?? `Image ${i}`}
+                  src={file.url}
+                  alt={`Image ${i + 1}`}
                   className="w-full h-72 object-cover"
                 />
               </SwiperSlide>
@@ -133,12 +121,12 @@ export default function ProjectDetail() {
               {otherFiles.map((file, i) => (
                 <li key={i}>
                   <a
-                    href={file.url ?? "#"}
+                    href={file.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 underline"
                   >
-                    {file.path?.split("/").pop() ?? "Unnamed file"}
+                    File {i + 1}
                   </a>
                 </li>
               ))}
