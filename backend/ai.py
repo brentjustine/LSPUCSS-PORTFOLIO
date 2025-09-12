@@ -4,23 +4,35 @@ import gdown
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
 from utils import extract_text_from_file_url
 from typing import List, Dict, Union
+import zipfile
 
 # --- Google Drive model settings ---
 MODEL_DIR = "./summarization_model"
-GDRIVE_FILE_ID = "13IM63y75s0_k2H4kIqJLeWPw5g4p6474"  # replace with your Google Drive shareable file ID
+MODEL_ZIP_PATH = os.path.join(MODEL_DIR, "model.zip")
+GDRIVE_FILE_ID = "13IM63y75s0_k2H4kIqJLeWPw5g4p6474"
 GDRIVE_URL = f"https://drive.google.com/uc?id={GDRIVE_FILE_ID}"
 
-# Download model if not exists
-if not os.path.exists(MODEL_DIR):
-    os.makedirs(MODEL_DIR, exist_ok=True)
+# Ensure model folder exists
+os.makedirs(MODEL_DIR, exist_ok=True)
+
+# Download model.zip if it doesn't exist
+if not os.path.exists(MODEL_ZIP_PATH):
     print("📥 Downloading model from Google Drive...")
-    gdown.download(GDRIVE_URL, output=os.path.join(MODEL_DIR, "model.zip"), quiet=False)
-    # unzip
-    import zipfile
-    with zipfile.ZipFile(os.path.join(MODEL_DIR, "model.zip"), 'r') as zip_ref:
-        zip_ref.extractall(MODEL_DIR)
-    os.remove(os.path.join(MODEL_DIR, "model.zip"))
-    print("✅ Model downloaded and extracted.")
+    try:
+        gdown.download(GDRIVE_URL, MODEL_ZIP_PATH, quiet=False)
+    except Exception as e:
+        raise RuntimeError(f"Failed to download model from Google Drive: {e}")
+
+    # Unzip
+    try:
+        with zipfile.ZipFile(MODEL_ZIP_PATH, 'r') as zip_ref:
+            zip_ref.extractall(MODEL_DIR)
+        os.remove(MODEL_ZIP_PATH)
+        print("✅ Model downloaded and extracted.")
+    except Exception as e:
+        raise RuntimeError(f"Failed to extract model.zip: {e}")
+else:
+    print("✅ Model already exists, skipping download.")
 
 # --- Load model once ---
 tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
