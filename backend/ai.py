@@ -9,8 +9,7 @@ import zipfile
 # --- Google Drive model settings ---
 MODEL_DIR = "./summarization_model"
 MODEL_ZIP_PATH = os.path.join(MODEL_DIR, "model.zip")
-GDRIVE_FILE_ID = "13IM63y75s0_k2H4kIqJLeWPw5g4p6474"
-GDRIVE_URL = f"https://drive.google.com/uc?id={GDRIVE_FILE_ID}"
+GDRIVE_FILE_ID = "13IM63y75s0_k2H4kIqJLeWPw5g4p6474"  # Google Drive file ID
 
 # Ensure model folder exists
 os.makedirs(MODEL_DIR, exist_ok=True)
@@ -19,7 +18,8 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 if not os.path.exists(MODEL_ZIP_PATH):
     print("📥 Downloading model from Google Drive...")
     try:
-        gdown.download(GDRIVE_URL, MODEL_ZIP_PATH, quiet=False)
+        # Use gdown with file ID (bypasses large file warning)
+        gdown.download(id=GDRIVE_FILE_ID, output=MODEL_ZIP_PATH, quiet=False)
     except Exception as e:
         raise RuntimeError(f"Failed to download model from Google Drive: {e}")
 
