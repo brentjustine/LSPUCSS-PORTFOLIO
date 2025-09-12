@@ -15,8 +15,10 @@ router = APIRouter()
 @router.post("/submit")
 async def submit_project(project: ProjectIn):
     try:
+        # Clear cached summary if it exists
         supabase.table("user_summaries").delete().eq("user_id", project.user_id).execute()
 
+        # Generate AI feedback using the local model
         ai_score = await generate_ai_score(project.description, project.file_url)
         ai_suggestions = await generate_suggestions(project.description, project.file_url)
 
@@ -26,7 +28,6 @@ async def submit_project(project: ProjectIn):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 
 # 📦 Return all projects, newest first
@@ -42,12 +43,11 @@ async def get_projects():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
-# 🧠 Return learning path suggestion using AI
+# 🧠 Return learning path suggestion using local AI
 @router.get("/suggestion")
-async def get_suggestion(title: str):
+async def get_suggestion(title: str, description: str = "", file_url: str = None, grade: float = None):
     try:
-        suggestion = await suggest_learning_path(title)
+        suggestion = await suggest_learning_path(title, description, file_paths=[{"url": file_url}] if file_url else None, grade=grade)
         return {"suggestion": suggestion}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -63,29 +63,24 @@ async def get_summary(request: Request):
         if not user_id:
             raise HTTPException(status_code=400, detail="Missing user_id")
 
-        print(f"🔍 Getting summary for user_id={user_id} | refresh={refresh}")
-
-        # 🧼 Check if user still has projects
+        # Fetch projects
         response = supabase.table("projects").select("*").eq("user_id", user_id).execute()
         projects = response.data or []
         if not projects:
-            print("🚫 No projects found. Skipping summary.")
             raise HTTPException(status_code=404, detail="No projects found for summary.")
 
-        # ✅ Use cached summary if available and refresh is false
+        # Return cached summary if available and refresh is false
         if not refresh:
             cached = supabase.table("user_summaries").select("*").eq("user_id", user_id).limit(1).execute()
             if cached.data and len(cached.data) > 0:
-                print("✅ Using cached summary")
                 return {"summary": cached.data[0]["summary"]}
 
-        # ♻️ Generate new summary
-        print("♻️ Generating new summary...")
+        # Generate new summary with local AI
         summary = await summarize_overall_insights(projects)
         if not summary:
             raise HTTPException(status_code=500, detail="AI failed to generate summary")
 
-        # 💾 Update the cache
+        # Cache the summary
         supabase.table("user_summaries").upsert({
             "user_id": user_id,
             "summary": summary
@@ -94,6 +89,4 @@ async def get_summary(request: Request):
         return {"summary": summary}
 
     except Exception as e:
-        print("❌ Summary error:", e)
         raise HTTPException(status_code=500, detail=str(e))
-
