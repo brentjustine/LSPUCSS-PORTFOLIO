@@ -13,4 +13,5 @@ PyPDF2==3.0.1
 
 aiofiles==23.2.1
 sqlalchemy==2.0.30
-transformer
+transformer 
+gdown
