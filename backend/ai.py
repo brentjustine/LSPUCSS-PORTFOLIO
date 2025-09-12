@@ -7,7 +7,7 @@ from typing import List, Dict, Union
 
 # --- Google Drive model settings ---
 MODEL_DIR = "./summarization_model"
-GDRIVE_FILE_ID = "1Muab3-Ax07acZvNhsusPlU0T7Fg3FOH4"  # replace with your Google Drive shareable file ID
+GDRIVE_FILE_ID = "13IM63y75s0_k2H4kIqJLeWPw5g4p6474"  # replace with your Google Drive shareable file ID
 GDRIVE_URL = f"https://drive.google.com/uc?id={GDRIVE_FILE_ID}"
 
 # Download model if not exists
