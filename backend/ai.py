@@ -1,36 +1,37 @@
 import os
 import asyncio
-import gdown
+import requests
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
 from utils import extract_text_from_file_url
 from typing import List, Dict, Union
 import zipfile
 
-# --- Google Drive model settings ---
+# --- Dropbox model settings ---
 MODEL_DIR = "./summarization_model"
 MODEL_ZIP_PATH = os.path.join(MODEL_DIR, "model.zip")
-GDRIVE_FILE_ID = "13IM63y75s0_k2H4kIqJLeWPw5g4p6474"  # Google Drive file ID
+DROPBOX_URL = "https://www.dropbox.com/scl/fi/iq7hr1e8zi9nvvgi9zxpd/model.zip?rlkey=dpa7d8mdnp08oadwx8x6rcfef&dl=1"
 
 # Ensure model folder exists
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 # Download model.zip if it doesn't exist
 if not os.path.exists(MODEL_ZIP_PATH):
-    print("📥 Downloading model from Google Drive...")
+    print("📥 Downloading model from Dropbox...")
     try:
-        # Use gdown with file ID (bypasses large file warning)
-        gdown.download(id=GDRIVE_FILE_ID, output=MODEL_ZIP_PATH, quiet=False)
-    except Exception as e:
-        raise RuntimeError(f"Failed to download model from Google Drive: {e}")
+        with requests.get(DROPBOX_URL, stream=True) as r:
+            r.raise_for_status()
+            with open(MODEL_ZIP_PATH, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        print("✅ Download complete.")
 
-    # Unzip
-    try:
+        # Unzip
         with zipfile.ZipFile(MODEL_ZIP_PATH, 'r') as zip_ref:
             zip_ref.extractall(MODEL_DIR)
         os.remove(MODEL_ZIP_PATH)
-        print("✅ Model downloaded and extracted.")
+        print("✅ Model extracted.")
     except Exception as e:
-        raise RuntimeError(f"Failed to extract model.zip: {e}")
+        raise RuntimeError(f"Failed to download or extract model: {e}")
 else:
     print("✅ Model already exists, skipping download.")
 
