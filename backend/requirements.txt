@@ -22,7 +22,6 @@ sqlalchemy==2.0.30
 
 # AI / NLP
 transformers==4.35.0
-tokenizers==0.13.3   # ensures no Rust build required
 
 # Google Drive download
 gdown==4.7.1
