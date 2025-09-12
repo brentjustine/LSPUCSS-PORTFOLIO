@@ -14,5 +14,4 @@ aiofiles==23.2.1
 sqlalchemy==2.0.30
 
 transformers==4.35.0
-tokenizers==0.14.1  # prebuilt wheel
 gdown==4.7.1
