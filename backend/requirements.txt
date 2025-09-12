@@ -2,7 +2,7 @@ fastapi==0.110.0
 uvicorn[standard]==0.29.0
 
 python-dotenv==1.0.1
-httpx==0.23.3   # ✅ compatible with supabase
+httpx==0.23.3
 
 python-multipart==0.0.9
 supabase==1.0.3
@@ -13,5 +13,5 @@ PyPDF2==3.0.1
 
 aiofiles==23.2.1
 sqlalchemy==2.0.30
-transformer 
-gdown
+transformers==4.35.0   # ✅ correct package name
+gdown==4.7.1
