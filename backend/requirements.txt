@@ -1,13 +1,18 @@
 fastapi==0.110.0
 uvicorn[standard]==0.29.0
+
 python-dotenv==1.0.1
 httpx==0.23.3
+
 python-multipart==0.0.9
 supabase==1.0.3
+
 python-docx==1.1.0
 PyPDF2==3.0.1
+
 aiofiles==23.2.1
 sqlalchemy==2.0.30
+
 transformers==4.35.0
-tokenizers==0.14.3
+tokenizers==0.14.1  # ✅ available version compatible with transformers
 gdown==4.7.1
