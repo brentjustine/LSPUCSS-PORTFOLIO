@@ -1,14 +1,43 @@
+import os
 import asyncio
+import requests
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
 from utils import extract_text_from_file_url
 from typing import List, Dict, Union
+import zipfile
 
-# --- Hugging Face model settings ---
-MODEL_ID = "menudongbibe/summarizationmodel"  # your uploaded model repo
+# --- Dropbox model settings ---
+MODEL_DIR = "./summarization_model"
+MODEL_ZIP_PATH = os.path.join(MODEL_DIR, "model.zip")
+DROPBOX_URL = "https://www.dropbox.com/scl/fo/btij12eqtunsokf08cug2/AIL7IPnAReQ-K3B__034R-g?rlkey=q4me3zk1esrli06d1m1uo5otu&st=pdy4ztkn&dl=1"
+
+# Ensure model folder exists
+os.makedirs(MODEL_DIR, exist_ok=True)
+
+# Download model.zip if it doesn't exist
+if not os.path.exists(MODEL_ZIP_PATH):
+    print("📥 Downloading model from Dropbox...")
+    try:
+        with requests.get(DROPBOX_URL, stream=True) as r:
+            r.raise_for_status()
+            with open(MODEL_ZIP_PATH, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        print("✅ Download complete.")
+
+        # Unzip
+        with zipfile.ZipFile(MODEL_ZIP_PATH, 'r') as zip_ref:
+            zip_ref.extractall(MODEL_DIR)
+        os.remove(MODEL_ZIP_PATH)
+        print("✅ Model extracted.")
+    except Exception as e:
+        raise RuntimeError(f"Failed to download or extract model: {e}")
+else:
+    print("✅ Model already exists, skipping download.")
 
 # --- Load model once ---
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
-model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_ID)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
+model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_DIR)
 summarizer = pipeline("summarization", model=model, tokenizer=tokenizer)
 
 # --- Helpers ---
@@ -30,7 +59,7 @@ async def generate_ai_score(description: str, file_paths: List[Union[str, Dict[s
     
     summary = summarizer(text, max_length=20, min_length=2, do_sample=False)
     try:
-        score = float("".join(filter(lambda x: x.isdigit() or x == ".", summary[0]['summary_text'])))
+        score = float("".join(filter(lambda x: x.isdigit() or x==".", summary[0]['summary_text'])))
         return max(0.0, min(score, 10.0))
     except:
         return 0.0
