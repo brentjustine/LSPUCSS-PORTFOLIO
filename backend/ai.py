@@ -9,7 +9,7 @@ import zipfile
 # --- Dropbox model settings ---
 MODEL_DIR = "./summarization_model"
 MODEL_ZIP_PATH = os.path.join(MODEL_DIR, "model.zip")
-DROPBOX_URL = "https://www.dropbox.com/scl/fi/iq7hr1e8zi9nvvgi9zxpd/model.zip?rlkey=dpa7d8mdnp08oadwx8x6rcfef&dl=1"
+DROPBOX_URL = "https://www.dropbox.com/scl/fo/btij12eqtunsokf08cug2/AIL7IPnAReQ-K3B__034R-g?rlkey=q4me3zk1esrli06d1m1uo5otu&st=ml6dcpoe&dl=1"
 
 # Ensure model folder exists
 os.makedirs(MODEL_DIR, exist_ok=True)
