@@ -332,9 +332,11 @@ export default function Home() {
               {aiLoading ? (
                 <p className="text-sm text-gray-700">Loading AI summary...</p>
               ) : (
-                <ReactMarkdown className="text-sm text-gray-700 whitespace-pre-wrap">
-                  {aiSummary || ""}
-                </ReactMarkdown>
+                <div className="text-sm text-gray-700 whitespace-pre-wrap">
+                  <ReactMarkdown>
+                    {aiSummary || ""}
+                  </ReactMarkdown>
+                </div>
               )}
             </div>
           </div>

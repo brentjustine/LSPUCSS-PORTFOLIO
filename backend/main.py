@@ -1,19 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import router
+from routes import router  # <-- adjust path if your file is named differently
 
-app = FastAPI()  # ✅ FIRST define the app
+app = FastAPI()
 
-# ✅ THEN add CORS middleware
+# 🔹 CORS setup (important for React frontend)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://lspucss-portfolio.vercel.app"],
+    allow_origins=["http://localhost:5173"],  # React dev server
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.get("/ping")
-def ping():
-    return {"status": "ok"}
+# 🔹 Include your router
 app.include_router(router)
